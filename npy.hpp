@@ -11,10 +11,20 @@
 
 namespace npy {
 
-const char magic_string = "\x93NUMPY";
+const char magic_string[] = "\x93NUMPY";
 const size_t magic_string_length = 6;
 
-inline void magic(std::ostream& ostream, unsigned char v_major=1, unsigned char v_minor=0) {
+// check if host is little endian
+inline bool isle(void) {
+  unsigned int i = 1;
+  char *c = (char*)&i;
+  if (*c)
+    return true;
+  else
+    return false;
+}
+
+inline void write_magic(std::ostream& ostream, unsigned char v_major=1, unsigned char v_minor=0) {
   ostream.write(magic_string, magic_string_length);
   ostream.put(v_major);
   ostream.put(v_minor);
@@ -25,7 +35,7 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
   istream.read(buf, magic_string_length+2);
 
   for (size_t i=0; i < magic_string_length; i++) {
-    if(preamble[i] != magic_string[i]) {
+    if(buf[i] != magic_string[i]) {
       throw std::runtime_error("io error: this file do not have a valid npy format.");
     }
   }
@@ -68,15 +78,6 @@ inline std::string get_typestring(const std::type_info& t) {
 }
 
 
-// check if host is little endian
-inline bool isle(void) {
-  unsigned int i = 1;
-  char *c = (char*)&i;
-  if (*c)
-    return true;
-  else
-    return false;
-}
 
 inline std::string trim_s(std::string s, const char * c){
   size_t start_pos, end_pos, len;
@@ -255,13 +256,14 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
 
     ss_header << "{'descr': '" << descr << "', 'fortran_order': " << s_fortran_order << ", 'shape': " << ss_shape.str() << " }";
 
-    size_t header_len = ss_header.str().length() + 1;
-    size_t metadata_len = header_len + magic_string_length + 2;
+    size_t header_len_pre = ss_header.str().length() + 1;
+    size_t metadata_len = header_len_pre + magic_string_length + 2;
 
     unsigned char version[2] = {1, 0};
     if (metadata_len >= 255*255) {
-      metadata_len = header_len + magic_string_length + 4;
-      version = {2, 0};
+      metadata_len = header_len_pre + magic_string_length + 4;
+      version[0] = 2;
+      version[1] = 0;
     }
     size_t padding_len = (16-metadata_len) % 16;
     std::string padding (padding_len, ' ');
@@ -269,7 +271,6 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
     ss_header << '\n';
 
     std::string header = ss_header.str();
-    size_t header_len = s_dictionary.length() + padding.length() + 1;
 
     // write magic
     write_magic(out, version[0], version[1]);
@@ -277,10 +278,10 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
     // write header length
     if (version[0] == 1 && version[2] == 0) {
       uint16_t header_len_le16 = htole16(header.length());
-      out.write(reinterpret_cast<char *> &header_len_le16, 2);
+      out.write(reinterpret_cast<char *>(&header_len_le16), 2);
     }else{
       uint32_t header_len_le32 = htole32(header.length());
-      out.write(reinterpret_cast<char *> &header_len_le32, 4);
+      out.write(reinterpret_cast<char *>(&header_len_le32), 4);
     }
 
     out << header;
@@ -303,11 +304,11 @@ void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned
     stream.write(reinterpret_cast<const char*>(&data[0]), sizeof(Scalar) * size);
 }
 
-std::string read_header_1_0(std::istream istream) {
+std::string read_header_1_0(std::istream& istream) {
     // read header length and convert from little endian
     uint16_t header_length_raw;
     char *header_ptr = reinterpret_cast<char *>(&header_length_raw);
-    stream.read(header_ptr, 2);
+    istream.read(header_ptr, 2);
     uint16_t header_length = le16toh(header_length_raw);
 
     if((magic_string_length + 2 + 2 + header_length) % 16 != 0) {
@@ -315,18 +316,18 @@ std::string read_header_1_0(std::istream istream) {
     }
 
     char *buf = new char[header_length];
-    stream.read(buf, header_length);
+    istream.read(buf, header_length);
     std::string header (buf);
     delete[] buf;
 
     return header;
 }
 
-std::string read_header_2_0(std::istream istream) {
+std::string read_header_2_0(std::istream& istream) {
     // read header length and convert from little endian
     uint32_t header_length_raw;
     char *header_ptr = reinterpret_cast<char *>(&header_length_raw);
-    stream.read(header_ptr, 4);
+    istream.read(header_ptr, 4);
     uint32_t header_length = le32toh(header_length_raw);
 
     if((magic_string_length + 2 + 4 + header_length) % 16 != 0) {
@@ -334,7 +335,7 @@ std::string read_header_2_0(std::istream istream) {
     }
 
     char *buf = new char[header_length];
-    stream.read(buf, header_length);
+    istream.read(buf, header_length);
     std::string header (buf);
     delete[] buf;
 
@@ -372,8 +373,8 @@ void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>&
        this is a mess! numpy supports *really* complex typestrings.
        we do not
     */
-    std::string expect_descr = get_typestring(typeid(Scalar));
-    if (descr != expect_descr) {
+    std::string expect_typestr = get_typestring(typeid(Scalar));
+    if (typestr != expect_typestr) {
       throw std::runtime_error("formatting error: typestrings not matching");
     }
 
