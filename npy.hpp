@@ -35,31 +35,6 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
   delete[] buf;
 }
 
-inline std::string map_type(const std::type_info& t)
-{
-    if(t == typeid(float) ) return "f" + std::to_string(sizeof(float));
-    if(t == typeid(double) ) return "f" + std::to_string(sizeof(double));
-    if(t == typeid(long double) ) return "f" + std::to_string(sizeof(long double));
-
-    if(t == typeid(int) ) return "i" + std::to_string(sizeof(int));
-    if(t == typeid(char) ) return "i" + std::to_string(sizeof(char));
-    if(t == typeid(short) ) return "i" + std::to_string(sizeof(short));
-    if(t == typeid(long) ) return "i" + std::to_string(sizeof(long));
-    if(t == typeid(long long) ) return "i" + std::to_string(sizeof(long long));
-
-    if(t == typeid(unsigned char) ) return "u" + std::to_string(sizeof(unsigned char));
-    if(t == typeid(unsigned short) ) return "u" + std::to_string(sizeof(unsigned short));
-    if(t == typeid(unsigned long) ) return "u" + std::to_string(sizeof(unsigned long));
-    if(t == typeid(unsigned long long) ) return "u" + std::to_string(sizeof(unsigned long long));
-    if(t == typeid(unsigned int) ) return "u" + std::to_string(sizeof(unsigned int));
-
-    if(t == typeid(std::complex<float>) ) return "c" + std::to_string(sizeof(std::complex<float>));
-    if(t == typeid(std::complex<double>) ) return "c" + std::to_string(sizeof(std::complex<double>));
-    if(t == typeid(std::complex<long double>) ) return "c" + std::to_string(sizeof(std::complex<long double>));
-
-    throw std::runtime_error("invalid data type");
-}
-
 inline std::string get_typestring(const std::type_info& t) {
     std::ostringstream ss;
     // little endian or big endian?
