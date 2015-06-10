@@ -7,8 +7,10 @@
 #include <vector>
 #include <endian.h>
 #include <typeinfo>
+#include <typeindex>
 #include <stdexcept>
 #include <algorithm>
+#include <map>
 
 namespace npy {
 
@@ -46,36 +48,45 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
   delete[] buf;
 }
 
+
+
 inline std::string get_typestring(const std::type_info& t) {
-    std::ostringstream ss;
+    std::string endianness;
+    const std::string little_endian_char = "<";
+    const std::string big_endian_char = ">";
+    const std::string no_endian_char = "|";
     // little endian or big endian?
     if (isle())
-      ss << "<";
+      endianness = "<";
     else
-      ss << ">";
+      endianness = ">";
 
-    // data type and word size
-    if(t == typeid(float) ) { ss << "f" << sizeof(float);  return ss.str(); }
-    if(t == typeid(double) ) { ss << "f" << sizeof(double);  return ss.str(); }
-    if(t == typeid(long double) ) { ss << "f" << sizeof(long double);  return ss.str(); }
+    std::map<std::type_index, std::string> map;
 
-    if(t == typeid(char) ) { ss << "i" << sizeof(char);  return ss.str(); }
-    if(t == typeid(short) ) { ss << "i" << sizeof(short);  return ss.str(); }
-    if(t == typeid(int) ) { ss << "i" << sizeof(int);  return ss.str(); }
-    if(t == typeid(long) ) { ss << "i" << sizeof(long);  return ss.str(); }
-    if(t == typeid(long long) ) { ss << "i" << sizeof(long long);  return ss.str(); }
+    map[std::type_index(typeid(float))] = endianness + "f" + std::to_string(sizeof(float));
+    map[std::type_index(typeid(double))] = endianness + "f" + std::to_string(sizeof(double));
+    map[std::type_index(typeid(long double))] = endianness + "f" + std::to_string(sizeof(long double));
 
-    if(t == typeid(unsigned char) ) { ss << "u" << sizeof(unsigned char);  return ss.str(); }
-    if(t == typeid(unsigned short) ) { ss << "u" << sizeof(unsigned short);  return ss.str(); }
-    if(t == typeid(unsigned int) ) { ss << "u" << sizeof(unsigned int);  return ss.str(); }
-    if(t == typeid(unsigned long) ) { ss << "u" << sizeof(unsigned long);  return ss.str(); }
-    if(t == typeid(unsigned long long) ) { ss << "u" << sizeof(unsigned long long);  return ss.str(); }
+    map[std::type_index(typeid(char))] = no_endian_char + "i" + std::to_string(sizeof(char));
+    map[std::type_index(typeid(short))] = endianness + "i" + std::to_string(sizeof(short));
+    map[std::type_index(typeid(int))] = endianness + "i" + std::to_string(sizeof(int));
+    map[std::type_index(typeid(long))] = endianness + "i" + std::to_string(sizeof(long));
+    map[std::type_index(typeid(long long))] = endianness + "i" + std::to_string(sizeof(long long));
 
-    if(t == typeid(std::complex<float>) ) { ss << "c" << sizeof(std::complex<float>);  return ss.str(); }
-    if(t == typeid(std::complex<double>) ) { ss << "c" << sizeof(std::complex<double>);  return ss.str(); }
-    if(t == typeid(std::complex<long double>) ) { ss << "c" << sizeof(std::complex<long double>);  return ss.str(); }
+    map[std::type_index(typeid(unsigned char))] = no_endian_char + "u" + std::to_string(sizeof(unsigned char));
+    map[std::type_index(typeid(unsigned short))] = endianness + "u" + std::to_string(sizeof(unsigned short));
+    map[std::type_index(typeid(unsigned int))] = endianness + "u" + std::to_string(sizeof(unsigned int));
+    map[std::type_index(typeid(unsigned long))] = endianness + "u" + std::to_string(sizeof(unsigned long));
+    map[std::type_index(typeid(unsigned long long))] = endianness + "u" + std::to_string(sizeof(unsigned long long));
 
-    throw std::runtime_error("unsupported data type");
+    map[std::type_index(typeid(std::complex<float>))] = endianness + "u" + std::to_string(sizeof(std::complex<float>));
+    map[std::type_index(typeid(std::complex<double>))] = endianness + "u" + std::to_string(sizeof(std::complex<double>));
+    map[std::type_index(typeid(std::complex<long double>))] = endianness + "u" + std::to_string(sizeof(std::complex<long double>));
+
+    if (map.count(std::type_index(t)) > 0)
+      return map[std::type_index(t)];
+    else
+      throw std::runtime_error("unsupported data type");
 }
 
 inline std::string unwrap_s(std::string s, char delim_front, char delim_back) {
@@ -87,7 +98,7 @@ inline std::string unwrap_s(std::string s, char delim_front, char delim_back) {
 
 inline std::string get_value_from_map(std::string mapstr) {
   size_t sep_pos = mapstr.find_first_of(":");
-  if (sep_pos == std::string::npos || sep_pos >= mapstr.length())
+  if (sep_pos == std::string::npos)
     return "";
 
   return mapstr.substr(sep_pos+1);
@@ -234,15 +245,15 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
     ss_header << "{'descr': '" << descr << "', 'fortran_order': " << s_fortran_order << ", 'shape': " << ss_shape.str() << " }";
 
     size_t header_len_pre = ss_header.str().length() + 1;
-    size_t metadata_len = header_len_pre + magic_string_length + 2;
+    size_t metadata_len = magic_string_length + 2 + 2 + header_len_pre;
 
     unsigned char version[2] = {1, 0};
     if (metadata_len >= 255*255) {
-      metadata_len = header_len_pre + magic_string_length + 4;
+      metadata_len = magic_string_length + 2 + 4 + header_len_pre;
       version[0] = 2;
       version[1] = 0;
     }
-    size_t padding_len = (16-metadata_len) % 16;
+    size_t padding_len = 16 - metadata_len % 16;
     std::string padding (padding_len, ' ');
     ss_header << padding;
     ss_header << '\n';
@@ -281,7 +292,7 @@ void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned
     stream.write(reinterpret_cast<const char*>(&data[0]), sizeof(Scalar) * size);
 }
 
-std::string read_header_1_0(std::istream& istream) {
+inline std::string read_header_1_0(std::istream& istream) {
     // read header length and convert from little endian
     uint16_t header_length_raw;
     char *header_ptr = reinterpret_cast<char *>(&header_length_raw);
@@ -300,7 +311,7 @@ std::string read_header_1_0(std::istream& istream) {
     return header;
 }
 
-std::string read_header_2_0(std::istream& istream) {
+inline std::string read_header_2_0(std::istream& istream) {
     // read header length and convert from little endian
     uint32_t header_length_raw;
     char *header_ptr = reinterpret_cast<char *>(&header_length_raw);
