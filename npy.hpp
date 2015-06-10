@@ -87,7 +87,7 @@ inline std::string unwrap_s(std::string s, char delim_front, char delim_back) {
 
 inline std::string get_value_from_map(std::string mapstr) {
   size_t sep_pos = mapstr.find_first_of(":");
-  if (sep_pos == std::string::npos || sep_pos >= str.length())
+  if (sep_pos == std::string::npos || sep_pos >= mapstr.length())
     return "";
 
   return mapstr.substr(sep_pos+1);
@@ -127,15 +127,15 @@ inline void ParseHeader(std::string header, std::string& descr, bool *fortran_or
   header.pop_back();
 
   // remove all whitespaces
-  s.erase(std::remove(s.begin(), s.end(), ' '), s.end());
+  header.erase(std::remove(header.begin(), header.end(), ' '), header.end());
 
   // unwrap dictionary
-  s = unwrap_s(s, '{', '}');
+  header = unwrap_s(header, '{', '}');
 
   // find the positions of the 3 dictionary keys
-  size_t keypos_descr = s.find("'descr'");
-  size_t keypos_fortran = s.find("'fortran_order'");
-  size_t keypos_shape = s.find("'shape'");
+  size_t keypos_descr = header.find("'descr'");
+  size_t keypos_fortran = header.find("'fortran_order'");
+  size_t keypos_shape = header.find("'shape'");
 
   // make sure all the keys are present
   if (keypos_descr == std::string::npos)
@@ -151,15 +151,15 @@ inline void ParseHeader(std::string header, std::string& descr, bool *fortran_or
 
   // get the 3 key-value pairs
   std::string keyvalue_descr;
-  keyvalue_descr = s.substr(keypos_descr, keypos_fortran - keypos_descr);
+  keyvalue_descr = header.substr(keypos_descr, keypos_fortran - keypos_descr);
   pop_char(keyvalue_descr, ',');
 
   std::string keyvalue_fortran;
-  keyvalue_fortran = s.substr(keypos_fortran, keypos_shape - keypos_fortran);
+  keyvalue_fortran = header.substr(keypos_fortran, keypos_shape - keypos_fortran);
   pop_char(keyvalue_fortran, ',');
 
   std::string keyvalue_shape;
-  keyvalue_shape = s.substr(keypos_shape, std::string::npos);
+  keyvalue_shape = header.substr(keypos_shape, std::string::npos);
   pop_char(keyvalue_shape, ',');
 
   // get the values (right side of `:')
