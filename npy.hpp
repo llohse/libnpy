@@ -253,7 +253,7 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
     write_magic(out, version[0], version[1]);
 
     // write header length
-    if (version[0] == 1 && version[2] == 0) {
+    if (version[0] == 1 && version[1] == 0) {
       uint16_t header_len_le16 = htole16(header.length());
       out.write(reinterpret_cast<char *>(&header_len_le16), 2);
     }else{
