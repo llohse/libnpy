@@ -8,6 +8,7 @@
 #include <endian.h>
 #include <typeinfo>
 #include <stdexcept>
+#include <algorithm>
 
 namespace npy {
 
@@ -77,38 +78,19 @@ inline std::string get_typestring(const std::type_info& t) {
     throw std::runtime_error("unsupported data type");
 }
 
-
-
-inline std::string trim_s(std::string s, const char * c){
-  size_t start_pos, end_pos, len;
-  start_pos = s.find_first_not_of(c);
-  end_pos = s.find_last_not_of(c);
-  if (start_pos == std::string::npos )
-    start_pos = 0;
-  if (end_pos == std::string::npos )
-    len = std::string::npos;
-  else
-    len = end_pos - start_pos + 1;
-
-  return s.substr(start_pos, len);
-}
-
 inline std::string unwrap_s(std::string s, char delim_front, char delim_back) {
-  std::string str = trim_s(s, " ");
-  if ((str.back() == delim_back) && (str.front() == delim_front))
-    return str.substr(1, str.length()-2);
+  if ((s.back() == delim_back) && (s.front() == delim_front))
+    return s.substr(1, s.length()-2);
   else
     throw std::runtime_error("unable to unwrap");
 }
 
 inline std::string get_value_from_map(std::string mapstr) {
-  std::string str = trim_s(mapstr, " ");
-  size_t sep_pos = str.find_first_of(":");
+  size_t sep_pos = mapstr.find_first_of(":");
   if (sep_pos == std::string::npos || sep_pos >= str.length())
     return "";
 
-  str = str.substr(sep_pos+1);
-  return trim_s(str, " ");
+  return mapstr.substr(sep_pos+1);
 }
 
 inline void pop_char(std::string& s, char c) {
@@ -144,19 +126,18 @@ inline void ParseHeader(std::string header, std::string& descr, bool *fortran_or
     throw std::runtime_error("invalid header");
   header.pop_back();
 
-  // remove padding
-  std::string s = trim_s(header, " ");
+  // remove all whitespaces
+  s.erase(std::remove(s.begin(), s.end(), ' '), s.end());
 
-  // unwrap dictionary and remove whitespaces
+  // unwrap dictionary
   s = unwrap_s(s, '{', '}');
-  s = trim_s(s, " ");
 
   // find the positions of the 3 dictionary keys
   size_t keypos_descr = s.find("'descr'");
   size_t keypos_fortran = s.find("'fortran_order'");
   size_t keypos_shape = s.find("'shape'");
 
-  // make sure the keys are present
+  // make sure all the keys are present
   if (keypos_descr == std::string::npos)
     throw std::runtime_error("missing 'descr' key");
   if (keypos_fortran == std::string::npos)
@@ -171,17 +152,14 @@ inline void ParseHeader(std::string header, std::string& descr, bool *fortran_or
   // get the 3 key-value pairs
   std::string keyvalue_descr;
   keyvalue_descr = s.substr(keypos_descr, keypos_fortran - keypos_descr);
-  keyvalue_descr = trim_s(keyvalue_descr, " ");
   pop_char(keyvalue_descr, ',');
 
   std::string keyvalue_fortran;
   keyvalue_fortran = s.substr(keypos_fortran, keypos_shape - keypos_fortran);
-  keyvalue_fortran = trim_s(keyvalue_fortran, " ");
   pop_char(keyvalue_fortran, ',');
 
   std::string keyvalue_shape;
   keyvalue_shape = s.substr(keypos_shape, std::string::npos);
-  keyvalue_shape = trim_s(keyvalue_shape, " ");
   pop_char(keyvalue_shape, ',');
 
   // get the values (right side of `:')
@@ -220,7 +198,6 @@ inline void ParseHeader(std::string header, std::string& descr, bool *fortran_or
     else
       dim_s = shape_s.substr(pos);
     pop_char(dim_s, ',');
-    dim_s = trim_s(dim_s, " ");
     if (dim_s.length() == 0) {
       if (pos_next != std::string::npos)
         throw std::runtime_error("invalid shape");
