@@ -11,11 +11,16 @@
 #include <stdexcept>
 #include <algorithm>
 #include <map>
+#include <regex>
 
 namespace npy {
 
 const char magic_string[] = "\x93NUMPY";
 const size_t magic_string_length = 6;
+
+const unsigned char little_endian_char = '<';
+const unsigned char big_endian_char = '>';
+const unsigned char no_endian_char = '|';
 
 // check if host is little endian
 inline bool isle(void) {
@@ -37,9 +42,13 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
   char *buf = new char[magic_string_length+2];
   istream.read(buf, magic_string_length+2);
 
+  if(!istream) {
+      throw std::runtime_error("io error: failed reading file");
+  }
+
   for (size_t i=0; i < magic_string_length; i++) {
     if(buf[i] != magic_string[i]) {
-      throw std::runtime_error("io error: this file do not have a valid npy format.");
+      throw std::runtime_error("this file do not have a valid npy format.");
     }
   }
 
@@ -52,14 +61,11 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
 
 inline std::string get_typestring(const std::type_info& t) {
     std::string endianness;
-    const std::string little_endian_char = "<";
-    const std::string big_endian_char = ">";
-    const std::string no_endian_char = "|";
     // little endian or big endian?
     if (isle())
-      endianness = "<";
+      endianness = little_endian_char;
     else
-      endianness = ">";
+      endianness = big_endian_char;
 
     std::map<std::type_index, std::string> map;
 
@@ -79,14 +85,25 @@ inline std::string get_typestring(const std::type_info& t) {
     map[std::type_index(typeid(unsigned long))] = endianness + "u" + std::to_string(sizeof(unsigned long));
     map[std::type_index(typeid(unsigned long long))] = endianness + "u" + std::to_string(sizeof(unsigned long long));
 
-    map[std::type_index(typeid(std::complex<float>))] = endianness + "u" + std::to_string(sizeof(std::complex<float>));
-    map[std::type_index(typeid(std::complex<double>))] = endianness + "u" + std::to_string(sizeof(std::complex<double>));
-    map[std::type_index(typeid(std::complex<long double>))] = endianness + "u" + std::to_string(sizeof(std::complex<long double>));
+    map[std::type_index(typeid(std::complex<float>))] = endianness + "c" + std::to_string(sizeof(std::complex<float>));
+    map[std::type_index(typeid(std::complex<double>))] = endianness + "c" + std::to_string(sizeof(std::complex<double>));
+    map[std::type_index(typeid(std::complex<long double>))] = endianness + "c" + std::to_string(sizeof(std::complex<long double>));
 
     if (map.count(std::type_index(t)) > 0)
       return map[std::type_index(t)];
     else
       throw std::runtime_error("unsupported data type");
+}
+
+inline void parse_typestring( std::string typestring){
+  std::regex re ("'([<>|])([ifuc])(\\d+)'");
+  std::smatch sm;
+
+  std::regex_match(typestring, sm, re );
+
+  if ( sm.size() != 4 ) {
+    throw std::runtime_error("invalid typestring");
+  }
 }
 
 inline std::string unwrap_s(std::string s, char delim_front, char delim_back) {
@@ -178,10 +195,7 @@ inline void ParseHeader(std::string header, std::string& descr, bool *fortran_or
   std::string fortran_s = get_value_from_map(keyvalue_fortran);
   std::string shape_s = get_value_from_map(keyvalue_shape);
 
-  /* 
-     TODO: this is where it gets messy. descr can be really complicated
-     we just ignore that fact and hope we only encounter simple ones
-  */
+  parse_typestring(descr_s);
   descr = unwrap_s(descr_s, '\'', '\'');
 
   // convert literal Python bool to C++ bool
@@ -357,10 +371,7 @@ void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>&
 
     ParseHeader(header, typestr, &fortran_order, shape);
 
-    /* check the typestring
-       this is a mess! numpy supports *really* complex typestrings.
-       we do not
-    */
+    // check if the typestring matches the given one
     std::string expect_typestr = get_typestring(typeid(Scalar));
     if (typestr != expect_typestr) {
       throw std::runtime_error("formatting error: typestrings not matching");
