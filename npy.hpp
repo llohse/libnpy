@@ -23,7 +23,6 @@
 #include <complex>
 #include <fstream>
 #include <string>
-#include <iostream>
 #include <sstream>
 #include <cstdint>
 #include <vector>
@@ -36,6 +35,24 @@
 #include <regex>
 
 namespace npy {
+namespace {
+/** Convert integer and float values to string.
+ *
+ * @note This function implements the same behaviour as to_string. The
+ *       latter is missing in some Android toolchains.
+ *
+ * @param[in] value Value to be converted to string.
+ *
+ * @return String representation of @p value.
+ */
+template <typename T, typename std::enable_if<std::is_arithmetic<typename std::decay<T>::type>::value, int>::type = 0>
+inline std::string to_string(T && value)
+{
+    std::stringstream stream;
+    stream << std::forward<T>(value);
+    return stream.str();
+}
+}
 
 const char magic_string[] = "\x93NUMPY";
 const size_t magic_string_length = 6;
@@ -83,6 +100,7 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
 
 inline std::string get_typestring(const std::type_info& t) {
     std::string endianness;
+    std::string no_endianness(no_endian_char, 1);
     // little endian or big endian?
     if (isle())
       endianness = little_endian_char;
@@ -91,25 +109,25 @@ inline std::string get_typestring(const std::type_info& t) {
 
     std::map<std::type_index, std::string> map;
 
-    map[std::type_index(typeid(float))] = endianness + "f" + std::to_string(sizeof(float));
-    map[std::type_index(typeid(double))] = endianness + "f" + std::to_string(sizeof(double));
-    map[std::type_index(typeid(long double))] = endianness + "f" + std::to_string(sizeof(long double));
+    map[std::type_index(typeid(float))] = endianness + "f" + to_string(sizeof(float));
+    map[std::type_index(typeid(double))] = endianness + "f" + to_string(sizeof(double));
+    map[std::type_index(typeid(long double))] = endianness + "f" + to_string(sizeof(long double));
 
-    map[std::type_index(typeid(char))] = no_endian_char + "i" + std::to_string(sizeof(char));
-    map[std::type_index(typeid(short))] = endianness + "i" + std::to_string(sizeof(short));
-    map[std::type_index(typeid(int))] = endianness + "i" + std::to_string(sizeof(int));
-    map[std::type_index(typeid(long))] = endianness + "i" + std::to_string(sizeof(long));
-    map[std::type_index(typeid(long long))] = endianness + "i" + std::to_string(sizeof(long long));
+    map[std::type_index(typeid(char))] = no_endianness + "i" + to_string(sizeof(char));
+    map[std::type_index(typeid(short))] = endianness + "i" + to_string(sizeof(short));
+    map[std::type_index(typeid(int))] = endianness + "i" + to_string(sizeof(int));
+    map[std::type_index(typeid(long))] = endianness + "i" + to_string(sizeof(long));
+    map[std::type_index(typeid(long long))] = endianness + "i" + to_string(sizeof(long long));
 
-    map[std::type_index(typeid(unsigned char))] = no_endian_char + "u" + std::to_string(sizeof(unsigned char));
-    map[std::type_index(typeid(unsigned short))] = endianness + "u" + std::to_string(sizeof(unsigned short));
-    map[std::type_index(typeid(unsigned int))] = endianness + "u" + std::to_string(sizeof(unsigned int));
-    map[std::type_index(typeid(unsigned long))] = endianness + "u" + std::to_string(sizeof(unsigned long));
-    map[std::type_index(typeid(unsigned long long))] = endianness + "u" + std::to_string(sizeof(unsigned long long));
+    map[std::type_index(typeid(unsigned char))] = no_endianness + "u" + to_string(sizeof(unsigned char));
+    map[std::type_index(typeid(unsigned short))] = endianness + "u" + to_string(sizeof(unsigned short));
+    map[std::type_index(typeid(unsigned int))] = endianness + "u" + to_string(sizeof(unsigned int));
+    map[std::type_index(typeid(unsigned long))] = endianness + "u" + to_string(sizeof(unsigned long));
+    map[std::type_index(typeid(unsigned long long))] = endianness + "u" + to_string(sizeof(unsigned long long));
 
-    map[std::type_index(typeid(std::complex<float>))] = endianness + "c" + std::to_string(sizeof(std::complex<float>));
-    map[std::type_index(typeid(std::complex<double>))] = endianness + "c" + std::to_string(sizeof(std::complex<double>));
-    map[std::type_index(typeid(std::complex<long double>))] = endianness + "c" + std::to_string(sizeof(std::complex<long double>));
+    map[std::type_index(typeid(std::complex<float>))] = endianness + "c" + to_string(sizeof(std::complex<float>));
+    map[std::type_index(typeid(std::complex<double>))] = endianness + "c" + to_string(sizeof(std::complex<double>));
+    map[std::type_index(typeid(std::complex<long double>))] = endianness + "c" + to_string(sizeof(std::complex<long double>));
 
     if (map.count(std::type_index(t)) > 0)
       return map[std::type_index(t)];
@@ -341,7 +359,7 @@ inline std::string read_header_1_0(std::istream& istream) {
 
     char *buf = new char[header_length];
     istream.read(buf, header_length);
-    std::string header (buf);
+    std::string header (buf, header_length);
     delete[] buf;
 
     return header;
@@ -360,7 +378,7 @@ inline std::string read_header_2_0(std::istream& istream) {
 
     char *buf = new char[header_length];
     istream.read(buf, header_length);
-    std::string header (buf);
+    std::string header (buf, header_length);
     delete[] buf;
 
     return header;
