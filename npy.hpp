@@ -100,9 +100,6 @@ inline std::string format_typestring(char endian, char type, char nbytes) {
 inline std::string get_typestring(const std::type_info& t) {
     std::map<std::type_index, std::string> map;
 
-    std::string endianness = std::string(1,host_endian_char);
-    std::string no_endian  = std::string(1,no_endian_char);
-
     map[std::type_index(typeid(float))] = format_typestring(host_endian_char, 'f', sizeof(float));
     map[std::type_index(typeid(double))] = format_typestring(host_endian_char, 'f', sizeof(double));
     map[std::type_index(typeid(long double))] = format_typestring(host_endian_char, 'f', sizeof(long double));
