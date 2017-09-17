@@ -89,7 +89,13 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
   delete[] buf;
 }
 
+inline std::string format_typestring(char endian, char type, char nbytes) {
+  const size_t max_buflen = 16;
+  char buf[max_buflen];
 
+  std::sprintf(buf, "%c%c%u", endian, type, nbytes);
+  return std::string(buf);
+}
 
 inline std::string get_typestring(const std::type_info& t) {
     std::map<std::type_index, std::string> map;
@@ -97,25 +103,26 @@ inline std::string get_typestring(const std::type_info& t) {
     std::string endianness = std::string(1,host_endian_char);
     std::string no_endian  = std::string(1,no_endian_char);
 
-    map[std::type_index(typeid(float))] = endianness + "f" + std::to_string(sizeof(float));
-    map[std::type_index(typeid(double))] = endianness + "f" + std::to_string(sizeof(double));
-    map[std::type_index(typeid(long double))] = endianness + "f" + std::to_string(sizeof(long double));
+    map[std::type_index(typeid(float))] = format_typestring(host_endian_char, 'f', sizeof(float));
+    map[std::type_index(typeid(double))] = format_typestring(host_endian_char, 'f', sizeof(double));
+    map[std::type_index(typeid(long double))] = format_typestring(host_endian_char, 'f', sizeof(long double));
 
-    map[std::type_index(typeid(char))] = no_endian + "i" + std::to_string(sizeof(char));
-    map[std::type_index(typeid(short))] = endianness + "i" + std::to_string(sizeof(short));
-    map[std::type_index(typeid(int))] = endianness + "i" + std::to_string(sizeof(int));
-    map[std::type_index(typeid(long))] = endianness + "i" + std::to_string(sizeof(long));
-    map[std::type_index(typeid(long long))] = endianness + "i" + std::to_string(sizeof(long long));
+    map[std::type_index(typeid(char))] = format_typestring(no_endian_char, 'i', sizeof(char));
+    map[std::type_index(typeid(short))] = format_typestring(host_endian_char, 'i', sizeof(short));
+    map[std::type_index(typeid(int))] = format_typestring(host_endian_char, 'i', sizeof(int));
+    map[std::type_index(typeid(long))] = format_typestring(host_endian_char, 'i', sizeof(long));
+    map[std::type_index(typeid(long long))] = format_typestring(host_endian_char, 'i', sizeof(long long));
 
-    map[std::type_index(typeid(unsigned char))] = no_endian + "u" + std::to_string(sizeof(unsigned char));
-    map[std::type_index(typeid(unsigned short))] = endianness + "u" + std::to_string(sizeof(unsigned short));
-    map[std::type_index(typeid(unsigned int))] = endianness + "u" + std::to_string(sizeof(unsigned int));
-    map[std::type_index(typeid(unsigned long))] = endianness + "u" + std::to_string(sizeof(unsigned long));
-    map[std::type_index(typeid(unsigned long long))] = endianness + "u" + std::to_string(sizeof(unsigned long long));
+    map[std::type_index(typeid(unsigned char))] = format_typestring(no_endian_char, 'u', sizeof(unsigned char));
+    map[std::type_index(typeid(unsigned short))] = format_typestring(host_endian_char, 'u', sizeof(unsigned short));
+    map[std::type_index(typeid(unsigned int))] = format_typestring(host_endian_char, 'u', sizeof(unsigned int));
+    map[std::type_index(typeid(unsigned long))] = format_typestring(host_endian_char, 'u', sizeof(unsigned long));
+    map[std::type_index(typeid(unsigned long long))] = format_typestring(host_endian_char, 'u', sizeof(unsigned long long));
 
-    map[std::type_index(typeid(std::complex<float>))] = endianness + "c" + std::to_string(sizeof(std::complex<float>));
-    map[std::type_index(typeid(std::complex<double>))] = endianness + "c" + std::to_string(sizeof(std::complex<double>));
-    map[std::type_index(typeid(std::complex<long double>))] = endianness + "c" + std::to_string(sizeof(std::complex<long double>));
+    map[std::type_index(typeid(std::complex<float>))] = format_typestring(host_endian_char, 'c', sizeof(std::complex<float>));
+
+    map[std::type_index(typeid(std::complex<double>))] = format_typestring(host_endian_char, 'c', sizeof(std::complex<double>));
+    map[std::type_index(typeid(std::complex<long double>))] = format_typestring(host_endian_char, 'c', sizeof(std::complex<long double>));
 
     if (map.count(std::type_index(t)) > 0) {
       return map[std::type_index(t)];
