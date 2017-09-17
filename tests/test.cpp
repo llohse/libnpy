@@ -15,6 +15,7 @@ int test_parse_header(void) {
 int test_load(void) {
   vector<unsigned long> shape;
   vector<double> data;
+
   npy::LoadArrayFromNumpy("double.npy", shape, data);
 
   cout << "shape: ";

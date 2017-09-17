@@ -35,24 +35,35 @@
 #include <map>
 #include <regex>
 
+
 namespace npy {
+
+/* Compile-time test for byte order.
+   If your compiler does not define these per default, you may want to define
+   one of these constants manually. 
+   Defaults to little endian order. */
+#if defined(__BYTE_ORDER) && __BYTE_ORDER == __BIG_ENDIAN || \
+    defined(__BIG_ENDIAN__) || \
+    defined(__ARMEB__) || \
+    defined(__THUMBEB__) || \
+    defined(__AARCH64EB__) || \
+    defined(_MIBSEB) || defined(__MIBSEB) || defined(__MIBSEB__)
+const bool big_endian = true;
+#else
+const bool big_endian = false;
+#endif
+
 
 const char magic_string[] = "\x93NUMPY";
 const size_t magic_string_length = 6;
 
-const unsigned char little_endian_char = '<';
-const unsigned char big_endian_char = '>';
-const unsigned char no_endian_char = '|';
+const char little_endian_char = '<';
+const char big_endian_char = '>';
+const char no_endian_char = '|';
 
-// check if host is little endian
-inline bool isle(void) {
-  unsigned int i = 1;
-  char *c = (char*)&i;
-  if (*c)
-    return true;
-  else
-    return false;
-}
+constexpr char host_endian_char = ( big_endian ? 
+    big_endian_char : 
+    little_endian_char );
 
 inline void write_magic(std::ostream& ostream, unsigned char v_major=1, unsigned char v_minor=0) {
   ostream.write(magic_string, magic_string_length);
@@ -82,26 +93,22 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
 
 
 inline std::string get_typestring(const std::type_info& t) {
-    std::string endianness;
-    // little endian or big endian?
-    if (isle())
-      endianness = little_endian_char;
-    else
-      endianness = big_endian_char;
-
     std::map<std::type_index, std::string> map;
+
+    std::string endianness = std::string(1,host_endian_char);
+    std::string no_endian  = std::string(1,no_endian_char);
 
     map[std::type_index(typeid(float))] = endianness + "f" + std::to_string(sizeof(float));
     map[std::type_index(typeid(double))] = endianness + "f" + std::to_string(sizeof(double));
     map[std::type_index(typeid(long double))] = endianness + "f" + std::to_string(sizeof(long double));
 
-    map[std::type_index(typeid(char))] = no_endian_char + "i" + std::to_string(sizeof(char));
+    map[std::type_index(typeid(char))] = no_endian + "i" + std::to_string(sizeof(char));
     map[std::type_index(typeid(short))] = endianness + "i" + std::to_string(sizeof(short));
     map[std::type_index(typeid(int))] = endianness + "i" + std::to_string(sizeof(int));
     map[std::type_index(typeid(long))] = endianness + "i" + std::to_string(sizeof(long));
     map[std::type_index(typeid(long long))] = endianness + "i" + std::to_string(sizeof(long long));
 
-    map[std::type_index(typeid(unsigned char))] = no_endian_char + "u" + std::to_string(sizeof(unsigned char));
+    map[std::type_index(typeid(unsigned char))] = no_endian + "u" + std::to_string(sizeof(unsigned char));
     map[std::type_index(typeid(unsigned short))] = endianness + "u" + std::to_string(sizeof(unsigned short));
     map[std::type_index(typeid(unsigned int))] = endianness + "u" + std::to_string(sizeof(unsigned int));
     map[std::type_index(typeid(unsigned long))] = endianness + "u" + std::to_string(sizeof(unsigned long));
@@ -111,8 +118,9 @@ inline std::string get_typestring(const std::type_info& t) {
     map[std::type_index(typeid(std::complex<double>))] = endianness + "c" + std::to_string(sizeof(std::complex<double>));
     map[std::type_index(typeid(std::complex<long double>))] = endianness + "c" + std::to_string(sizeof(std::complex<long double>));
 
-    if (map.count(std::type_index(t)) > 0)
+    if (map.count(std::type_index(t)) > 0) {
       return map[std::type_index(t)];
+    }
     else
       throw std::runtime_error("unsupported data type");
 }
