@@ -27,7 +27,6 @@
 #include <sstream>
 #include <cstdint>
 #include <vector>
-#include <endian.h>
 #include <typeinfo>
 #include <typeindex>
 #include <stdexcept>
