@@ -27,11 +27,8 @@
 #include <sstream>
 #include <cstdint>
 #include <vector>
-#include <typeinfo>
-#include <typeindex>
 #include <stdexcept>
 #include <algorithm>
-#include <map>
 #include <regex>
 
 
@@ -89,44 +86,41 @@ inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned c
   delete[] buf;
 }
 
-inline std::string format_typestring(char endian, char type, char nbytes) {
-  const size_t max_buflen = 16;
-  char buf[max_buflen];
+// typestring magic
+struct Typestring {
+  private:
+    char c_endian;
+    char c_type;
+    int  len;
 
-  std::sprintf(buf, "%c%c%u", endian, type, nbytes);
-  return std::string(buf);
-}
-
-inline std::string get_typestring(const std::type_info& t) {
-    std::map<std::type_index, std::string> map;
-
-    map[std::type_index(typeid(float))] = format_typestring(host_endian_char, 'f', sizeof(float));
-    map[std::type_index(typeid(double))] = format_typestring(host_endian_char, 'f', sizeof(double));
-    map[std::type_index(typeid(long double))] = format_typestring(host_endian_char, 'f', sizeof(long double));
-
-    map[std::type_index(typeid(char))] = format_typestring(no_endian_char, 'i', sizeof(char));
-    map[std::type_index(typeid(short))] = format_typestring(host_endian_char, 'i', sizeof(short));
-    map[std::type_index(typeid(int))] = format_typestring(host_endian_char, 'i', sizeof(int));
-    map[std::type_index(typeid(long))] = format_typestring(host_endian_char, 'i', sizeof(long));
-    map[std::type_index(typeid(long long))] = format_typestring(host_endian_char, 'i', sizeof(long long));
-
-    map[std::type_index(typeid(unsigned char))] = format_typestring(no_endian_char, 'u', sizeof(unsigned char));
-    map[std::type_index(typeid(unsigned short))] = format_typestring(host_endian_char, 'u', sizeof(unsigned short));
-    map[std::type_index(typeid(unsigned int))] = format_typestring(host_endian_char, 'u', sizeof(unsigned int));
-    map[std::type_index(typeid(unsigned long))] = format_typestring(host_endian_char, 'u', sizeof(unsigned long));
-    map[std::type_index(typeid(unsigned long long))] = format_typestring(host_endian_char, 'u', sizeof(unsigned long long));
-
-    map[std::type_index(typeid(std::complex<float>))] = format_typestring(host_endian_char, 'c', sizeof(std::complex<float>));
-
-    map[std::type_index(typeid(std::complex<double>))] = format_typestring(host_endian_char, 'c', sizeof(std::complex<double>));
-    map[std::type_index(typeid(std::complex<long double>))] = format_typestring(host_endian_char, 'c', sizeof(std::complex<long double>));
-
-    if (map.count(std::type_index(t)) > 0) {
-      return map[std::type_index(t)];
+  public:
+    inline std::string str() {
+      const size_t max_buflen = 16;
+      char buf[max_buflen];
+      std::sprintf(buf, "%c%c%u", c_endian, c_type, len);
+      return std::string(buf);
     }
-    else
-      throw std::runtime_error("unsupported data type");
-}
+
+    Typestring(std::vector<float>& v) :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(float)} {}
+    Typestring(std::vector<double>& v) :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(double)} {}
+    Typestring(std::vector<long double>& v) :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(long double)} {}
+
+    Typestring(std::vector<char>& v) :c_endian {no_endian_char}, c_type {'i'}, len {sizeof(char)} {}
+    Typestring(std::vector<short>& v) :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(short)} {}
+    Typestring(std::vector<int>& v) :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(int)} {}
+    Typestring(std::vector<long>& v) :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(long)} {}
+    Typestring(std::vector<long long>& v) :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(long long)} {}
+
+    Typestring(std::vector<unsigned char>& v) :c_endian {no_endian_char}, c_type {'u'}, len {sizeof(unsigned char)} {}
+    Typestring(std::vector<unsigned short>& v) :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned short)} {}
+    Typestring(std::vector<unsigned int>& v) :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned int)} {}
+    Typestring(std::vector<unsigned long>& v) :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long)} {}
+    Typestring(std::vector<unsigned long long>& v) :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long long)} {}
+
+    Typestring(std::vector<std::complex<float>>& v) :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<float>)} {}
+    Typestring(std::vector<std::complex<double>>& v) :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<double>)} {}
+    Typestring(std::vector<std::complex<long double>>& v) :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<long double>)} {}
+};
 
 inline void parse_typestring( std::string typestring){
   std::regex re ("'([<>|])([ifuc])(\\d+)'");
@@ -139,6 +133,7 @@ inline void parse_typestring( std::string typestring){
   }
 }
 
+/* Helpers for the improvised parser */
 inline std::string unwrap_s(std::string s, char delim_front, char delim_back) {
   if ((s.back() == delim_back) && (s.front() == delim_front))
     return s.substr(1, s.length()-2);
@@ -206,7 +201,10 @@ inline void ParseHeader(std::string header, std::string& descr, bool *fortran_or
   if (keypos_shape == std::string::npos)
     throw std::runtime_error("missing 'shape' key");
 
-  // make sure the keys are in order
+  // Make sure the keys are in order.
+  // Note that this violates the standard, which states that readers *must* not 
+  // depend on the correct order here.
+  // TODO: fix
   if (keypos_descr >= keypos_fortran || keypos_fortran >= keypos_shape)
     throw std::runtime_error("header keys in wrong order");
 
@@ -322,23 +320,6 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
     out << header;
 }
 
-template<typename Scalar>
-void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<Scalar>& data)
-{
-    std::string typestring = get_typestring(typeid(Scalar));
-
-    std::ofstream stream( filename, std::ofstream::binary);
-    if(!stream) {
-        throw std::runtime_error("io error: failed to open a file.");
-    }
-    WriteHeader(stream, typestring, fortran_order, n_dims, shape);
-
-    size_t size = 1;
-    for (unsigned int i=0; i<n_dims; ++i)
-      size *= shape[i];
-    stream.write(reinterpret_cast<const char*>(&data[0]), sizeof(Scalar) * size);
-}
-
 inline std::string read_header_1_0(std::istream& istream) {
     // read header length and convert from little endian
     uint16_t header_length_raw;
@@ -347,7 +328,7 @@ inline std::string read_header_1_0(std::istream& istream) {
     uint16_t header_length = le16toh(header_length_raw);
 
     if((magic_string_length + 2 + 2 + header_length) % 16 != 0) {
-        // display warning
+        // TODO: display warning
     }
 
     char *buf = new char[header_length];
@@ -366,7 +347,7 @@ inline std::string read_header_2_0(std::istream& istream) {
     uint32_t header_length = le32toh(header_length_raw);
 
     if((magic_string_length + 2 + 4 + header_length) % 16 != 0) {
-      // display warning
+      // TODO: display warning
     }
 
     char *buf = new char[header_length];
@@ -377,6 +358,28 @@ inline std::string read_header_2_0(std::istream& istream) {
     return header;
 }
 
+template<typename Scalar>
+void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<Scalar>& data)
+{
+    Typestring typestring_o {data};
+    std::string typestring = typestring_o.str();
+
+    std::ofstream stream( filename, std::ofstream::binary);
+    if(!stream) {
+        throw std::runtime_error("io error: failed to open a file.");
+    }
+    WriteHeader(stream, typestring, fortran_order, n_dims, shape);
+
+    size_t size = 1;
+    for (unsigned int i=0; i<n_dims; ++i)
+      size *= shape[i];
+    stream.write(reinterpret_cast<const char*>(&data[0]), sizeof(Scalar) * size);
+}
+
+
+/**
+
+ */
 template<typename Scalar>
 void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>& shape, std::vector<Scalar>& data)
 {
@@ -405,7 +408,8 @@ void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>&
     ParseHeader(header, typestr, &fortran_order, shape);
 
     // check if the typestring matches the given one
-    std::string expect_typestr = get_typestring(typeid(Scalar));
+    Typestring typestring_o {data};
+    std::string expect_typestr = typestring_o.str();
     if (typestr != expect_typestr) {
       throw std::runtime_error("formatting error: typestrings not matching");
     }
