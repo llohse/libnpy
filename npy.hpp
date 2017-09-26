@@ -333,7 +333,7 @@ inline std::string read_header_1_0(std::istream& istream) {
 
     char *buf = new char[header_length];
     istream.read(buf, header_length);
-    std::string header (buf);
+    std::string header (buf, header_length);
     delete[] buf;
 
     return header;
@@ -352,7 +352,7 @@ inline std::string read_header_2_0(std::istream& istream) {
 
     char *buf = new char[header_length];
     istream.read(buf, header_length);
-    std::string header (buf);
+    std::string header (buf, header_length);
     delete[] buf;
 
     return header;
