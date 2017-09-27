@@ -351,7 +351,7 @@ inline std::string read_header_1_0(std::istream& istream) {
 
 inline std::string read_header_2_0(std::istream& istream) {
     // read header length and convert from little endian
-    char header_len_le32[2];
+    char header_len_le32[4];
     istream.read(header_len_le32, 4);
 
     uint32_t header_length = (header_len_le32[0] <<  0) | (header_len_le32[1] <<  8)
