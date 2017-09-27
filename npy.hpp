@@ -310,11 +310,21 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
 
     // write header length
     if (version[0] == 1 && version[1] == 0) {
-      uint16_t header_len_le16 = htole16(header.length());
-      out.write(reinterpret_cast<char *>(&header_len_le16), 2);
+      char header_len_le16[2];
+      uint16_t header_len = header.length();
+
+      header_len_le16[0] = (header_len >> 0) & 0xff;
+      header_len_le16[1] = (header_len >> 8) & 0xff;
+      out.write(reinterpret_cast<char *>(header_len_le16), 2);
     }else{
-      uint32_t header_len_le32 = htole32(header.length());
-      out.write(reinterpret_cast<char *>(&header_len_le32), 4);
+      char header_len_le32[4];
+      uint32_t header_len = header.length();
+
+      header_len_le32[0] = (header_len >> 0) & 0xff;
+      header_len_le32[1] = (header_len >> 8) & 0xff;
+      header_len_le32[2] = (header_len >> 16) & 0xff;
+      header_len_le32[3] = (header_len >> 24) & 0xff;
+      out.write(reinterpret_cast<char *>(header_len_le32), 4);
     }
 
     out << header;
@@ -322,10 +332,10 @@ inline void WriteHeader(std::ostream& out, const std::string& descr, bool fortra
 
 inline std::string read_header_1_0(std::istream& istream) {
     // read header length and convert from little endian
-    uint16_t header_length_raw;
-    char *header_ptr = reinterpret_cast<char *>(&header_length_raw);
-    istream.read(header_ptr, 2);
-    uint16_t header_length = le16toh(header_length_raw);
+    char header_len_le16[2];
+    istream.read(header_len_le16, 2);
+
+    uint16_t header_length = (header_len_le16[0] << 0) | (header_len_le16[1] << 8);
 
     if((magic_string_length + 2 + 2 + header_length) % 16 != 0) {
         // TODO: display warning
@@ -341,10 +351,11 @@ inline std::string read_header_1_0(std::istream& istream) {
 
 inline std::string read_header_2_0(std::istream& istream) {
     // read header length and convert from little endian
-    uint32_t header_length_raw;
-    char *header_ptr = reinterpret_cast<char *>(&header_length_raw);
-    istream.read(header_ptr, 4);
-    uint32_t header_length = le32toh(header_length_raw);
+    char header_len_le32[2];
+    istream.read(header_len_le32, 4);
+
+    uint32_t header_length = (header_len_le32[0] <<  0) | (header_len_le32[1] <<  8)
+                           | (header_len_le32[2] << 16) | (header_len_le32[3] <<  24);
 
     if((magic_string_length + 2 + 4 + header_length) % 16 != 0) {
       // TODO: display warning
