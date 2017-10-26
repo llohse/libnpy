@@ -4,11 +4,15 @@ import numpy
 
 data = [ [1, 2, 3], [4, 5, 6], ]
 
-ar = numpy.array(data, numpy.dtype('double'))
-numpy.save("double.npy", ar)
+dtypes = ['f4', 'f8', 
+          'i1', 'i2', 'i4', 'i8',
+          'u1', 'u2', 'u4', 'u8',
+          'c8', 'c16', ]
 
-ar2 = numpy.array(data, numpy.dtype('int'))
-numpy.save("int.npy", ar2)
+for d in dtypes:
+  a = numpy.array(data, numpy.dtype(d))
+  numpy.save('data/' + d + ".npy", a)
 
-ar3 = numpy.array(data, numpy.dtype('u1'))
-numpy.save("u1.npy", ar3)
+booldata = [ [False, True, False], [True, False, True], ]
+a = numpy.array(booldata, numpy.dtype(bool))
+numpy.save('data/' + 'bool' + ".npy", a)

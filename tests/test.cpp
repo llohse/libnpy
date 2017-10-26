@@ -5,18 +5,11 @@
 
 using namespace std;
 
-int test_parse_header(void) {
-//  std::string test_header = "{'descr': '<f8', 'fortran_order': False, 'shape': (2, 3), }          \n";
-//  npy::ParseHeader(s, &fortran_order, shape, descr);
-
-  return 0;
-}
-
 int test_load(void) {
   vector<unsigned long> shape;
   vector<double> data;
 
-  npy::LoadArrayFromNumpy("double.npy", shape, data);
+  npy::LoadArrayFromNumpy("data/f8.npy", shape, data);
 
   cout << "shape: ";
   for (size_t i = 0; i<shape.size(); i++)
@@ -32,13 +25,19 @@ int test_load(void) {
 
 int test_save(void) {
   const long unsigned leshape [] = {2,3};
-//  npy::SaveArrayAsNumpy("../../out.npy", false, 2, leshape, data);
+  vector<double> data {1, 2, 3, 4, 5, 6};
+  npy::SaveArrayAsNumpy("data/out.npy", false, 2, leshape, data);
+
+  const long unsigned leshape2 [] = {6};
+  npy::SaveArrayAsNumpy("data/out2.npy", false, 1, leshape2, data);
 
   return 0;
 }
 
 int main(int argc, char **argv) {
   test_load();
+
+  test_save();
 
   return 0;
 }
