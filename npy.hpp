@@ -26,10 +26,12 @@
 #include <iostream>
 #include <sstream>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
 #include <regex>
+#include <unordered_map>
 
 
 namespace npy {
@@ -67,23 +69,19 @@ inline void write_magic(std::ostream& ostream, unsigned char v_major=1, unsigned
   ostream.put(v_minor);
 }
 
-inline void read_magic(std::istream& istream, unsigned char *v_major, unsigned char *v_minor) {
-  char *buf = new char[magic_string_length+2];
+inline void read_magic(std::istream& istream, unsigned char& v_major, unsigned char& v_minor) {
+  char buf[magic_string_length+2];
   istream.read(buf, magic_string_length+2);
 
   if(!istream) {
-      throw std::runtime_error("io error: failed reading file");
+    throw std::runtime_error("io error: failed reading file");
   }
 
-  for (size_t i=0; i < magic_string_length; i++) {
-    if(buf[i] != magic_string[i]) {
-      throw std::runtime_error("this file do not have a valid npy format.");
-    }
-  }
+  if (0 != std::memcmp(buf, magic_string, magic_string_length))
+    throw std::runtime_error("this file does not have a valid npy format.");
 
-  *v_major = buf[magic_string_length];
-  *v_minor = buf[magic_string_length+1];
-  delete[] buf;
+  v_major = buf[magic_string_length];
+  v_minor = buf[magic_string_length+1];
 }
 
 // typestring magic
