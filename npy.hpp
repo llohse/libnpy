@@ -383,7 +383,7 @@ inline void write_header(std::ostream& out, const std::string& descr, bool fortr
       version[0] = 2;
       version[1] = 0;
     }
-    size_t padding_len = 16 - metadata_len % 16;
+    size_t padding_len = 16 - length % 16;
     std::string padding (padding_len, ' ');
 
     // write magic
