@@ -1,11 +1,15 @@
+.PHONY: all clean
 
-test: test.cpp ../npy.hpp f8.npy
+all: test data/f8.npy
+	./test
+
+test: test.cpp ../npy.hpp
 	g++ -o test -Wall -Wpedantic -std=c++11 test.cpp
 
-%.npy: createnpy.py
+data/%.npy: createnpy.py
+	mkdir -p data
 	python3 createnpy.py
 
-.PHONY: clean
-
 clean:
-	rm test *npy
+	rm test
+	rm -r data
