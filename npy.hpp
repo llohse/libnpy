@@ -20,6 +20,9 @@
    SOFTWARE.
 */
 
+#ifndef NPY_H
+#define NPY_H
+
 #include <complex>
 #include <fstream>
 #include <string>
@@ -509,3 +512,5 @@ void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>&
 }
 
 } // namespace npy
+
+#endif // NPY_H
