@@ -240,7 +240,7 @@ inline std::unordered_map<std::string, std::string> parse_dict(std::string in, s
 /**
   Parses the string representation of a Python boolean
   */
-bool parse_bool(const std::string& in) {
+inline bool parse_bool(const std::string& in) {
   if (in == "True")
     return true;
   if (in == "False")
@@ -252,7 +252,7 @@ bool parse_bool(const std::string& in) {
 /**
   Parses the string representation of a Python str
   */
-std::string parse_str(const std::string& in) {
+inline std::string parse_str(const std::string& in) {
   if ((in.front() == '\'') && (in.back() == '\''))
     return in.substr(1, in.length()-2);
 
@@ -262,7 +262,7 @@ std::string parse_str(const std::string& in) {
 /**
   Parses the string represenatation of a Python tuple into a vector of its items
  */
-std::vector<std::string> parse_tuple(std::string in) {
+inline std::vector<std::string> parse_tuple(std::string in) {
   std::vector<std::string> v;
   const char seperator = ',';
 
@@ -460,7 +460,7 @@ inline ndarray_len_t comp_size(const std::vector<ndarray_len_t>& shape) {
 }
 
 template<typename Scalar>
-void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<Scalar>& data)
+inline void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<Scalar>& data)
 {
     Typestring typestring_o(data);
     std::string typestring = typestring_o.str();
@@ -480,7 +480,7 @@ void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned
 
 
 template<typename Scalar>
-void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>& shape, std::vector<Scalar>& data)
+inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>& shape, std::vector<Scalar>& data)
 {
     std::ifstream stream(filename, std::ifstream::binary);
     if(!stream) {
