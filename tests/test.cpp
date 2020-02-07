@@ -7,18 +7,25 @@ using namespace std;
 
 int test_load(void) {
   vector<unsigned long> shape;
+  bool fortran_order;
   vector<double> data;
 
-  npy::LoadArrayFromNumpy("data/f8.npy", shape, data);
+  for (auto path : {"data/f8.npy", "data/f8_t.npy"}) {
+    shape.clear();
+    data.clear();
+    npy::LoadArrayFromNumpy(path, shape, fortran_order, data);
 
-  cout << "shape: ";
-  for (size_t i = 0; i<shape.size(); i++)
-    cout << shape[i] << ", ";
-  cout << endl;
-  cout << "data: ";
-  for (size_t i = 0; i<data.size(); i++)
-    cout << data[i] << ", ";
-  cout << endl;
+    cout << "shape: ";
+    for (size_t i = 0; i<shape.size(); i++)
+      cout << shape[i] << ", ";
+    cout << endl;
+    cout << "fortran order: " << (fortran_order ? "+" : "-");
+    cout << endl;
+    cout << "data: ";
+    for (size_t i = 0; i<data.size(); i++)
+      cout << data[i] << ", ";
+    cout << endl << endl;
+  }
 
   return 0;
 }
