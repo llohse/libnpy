@@ -395,14 +395,14 @@ inline void write_header(std::ostream& out, const std::string& descr, bool fortr
     // write header length
     if (version[0] == 1 && version[1] == 0) {
       char header_len_le16[2];
-      uint16_t header_len = header_dict.length() + padding.length() + 1;
+      uint16_t header_len = static_cast<uint16_t>(header_dict.length() + padding.length() + 1);
 
       header_len_le16[0] = (header_len >> 0) & 0xff;
       header_len_le16[1] = (header_len >> 8) & 0xff;
       out.write(reinterpret_cast<char *>(header_len_le16), 2);
     }else{
       char header_len_le32[4];
-      uint32_t header_len = header_dict.length() + padding.length() + 1;
+      uint32_t header_len = static_cast<uint32_t>(header_dict.length() + padding.length() + 1);
 
       header_len_le32[0] = (header_len >> 0) & 0xff;
       header_len_le32[1] = (header_len >> 8) & 0xff;
@@ -482,6 +482,13 @@ inline void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, u
 template<typename Scalar>
 inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>& shape, std::vector<Scalar>& data)
 {
+    bool fortran_order;
+    LoadArrayFromNumpy<Scalar>(filename, shape, fortran_order, data);
+}
+
+template<typename Scalar>
+inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned long>& shape, bool& fortran_order, std::vector<Scalar>& data)
+{
     std::ifstream stream(filename, std::ifstream::binary);
     if(!stream) {
         throw std::runtime_error("io error: failed to open a file.");
@@ -490,7 +497,6 @@ inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned
     std::string header = read_header(stream);
 
     // parse header
-    bool fortran_order;
     std::string typestr;
 
     parse_header(header, typestr, fortran_order, shape);
