@@ -54,6 +54,7 @@ const bool big_endian = true;
 const bool big_endian = false;
 #endif
 
+template<class T> void _unused(T &v) {do { (void)(v); } while (0); }
 
 const char magic_string[] = "\x93NUMPY";
 const size_t magic_string_length = 6;
@@ -106,39 +107,40 @@ struct Typestring {
     }
 
     Typestring(const std::vector<float>& v) 
-      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(float)} {}
+      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(float)} {_unused(v);}
     Typestring(const std::vector<double>& v) 
-      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(double)} {}
+      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(double)} {_unused(v);}
     Typestring(const std::vector<long double>& v) 
-      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(long double)} {}
+      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(long double)} {_unused(v);}
 
     Typestring(const std::vector<char>& v) 
-      :c_endian {no_endian_char}, c_type {'i'}, len {sizeof(char)} {}
+      :c_endian {no_endian_char}, c_type {'i'}, len {sizeof(char)} {_unused(v);}
     Typestring(const std::vector<short>& v) 
-      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(short)} {}
+      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(short)} {_unused(v);}
     Typestring(const std::vector<int>& v) 
-      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(int)} {}
+      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(int)} {_unused(v);}
     Typestring(const std::vector<long>& v)
-      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(long)} {}
-    Typestring(const std::vector<long long>& v) :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(long long)} {}
+      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(long)} {_unused(v);}
+    Typestring(const std::vector<long long>& v) :c_endian {host_endian_char}, c_type {'i'},
+                                                 len {sizeof(long long)} {_unused(v);}
 
     Typestring(const std::vector<unsigned char>& v)
-      :c_endian {no_endian_char}, c_type {'u'}, len {sizeof(unsigned char)} {}
+      :c_endian {no_endian_char}, c_type {'u'}, len {sizeof(unsigned char)} {_unused(v);}
     Typestring(const std::vector<unsigned short>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned short)} {}
+      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned short)} {_unused(v);}
     Typestring(const std::vector<unsigned int>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned int)} {}
+      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned int)} {_unused(v);}
     Typestring(const std::vector<unsigned long>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long)} {}
+      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long)} {_unused(v);}
     Typestring(const std::vector<unsigned long long>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long long)} {}
+      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long long)} {_unused(v);}
 
     Typestring(const std::vector<std::complex<float>>& v)
-      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<float>)} {}
+      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<float>)} {_unused(v);}
     Typestring(const std::vector<std::complex<double>>& v)
-      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<double>)} {}
+      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<double>)} {_unused(v);}
     Typestring(const std::vector<std::complex<long double>>& v)
-      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<long double>)} {}
+      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<long double>)} {_unused(v);}
 };
 
 inline void parse_typestring( std::string typestring){
