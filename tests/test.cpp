@@ -41,7 +41,7 @@ int test_save(void) {
   return 0;
 }
 
-int main(int argc, char **argv) {
+int main() {
   test_load();
 
   test_save();

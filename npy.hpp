@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <regex>
 #include <unordered_map>
+#include <type_traits>
 
 
 namespace npy {
@@ -91,55 +92,114 @@ inline void read_magic(std::istream& istream, unsigned char& v_major, unsigned c
 }
 
 // typestring magic
-struct Typestring {
-  private:
-    char c_endian;
-    char c_type;
-    int  len;
+/*
+struct Typestring_ {
+  const char c_endian;
+  const char c_type;
+  const int  len;
 
-  public:
-    inline std::string str() {
-      const size_t max_buflen = 16;
-      char buf[max_buflen];
-      std::sprintf(buf, "%c%c%u", c_endian, c_type, len);
-      return std::string(buf);
-    }
-
-    Typestring(const std::vector<float>& v) 
-      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(float)} {}
-    Typestring(const std::vector<double>& v) 
-      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(double)} {}
-    Typestring(const std::vector<long double>& v) 
-      :c_endian {host_endian_char}, c_type {'f'}, len {sizeof(long double)} {}
-
-    Typestring(const std::vector<char>& v) 
-      :c_endian {no_endian_char}, c_type {'i'}, len {sizeof(char)} {}
-    Typestring(const std::vector<short>& v) 
-      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(short)} {}
-    Typestring(const std::vector<int>& v) 
-      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(int)} {}
-    Typestring(const std::vector<long>& v)
-      :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(long)} {}
-    Typestring(const std::vector<long long>& v) :c_endian {host_endian_char}, c_type {'i'}, len {sizeof(long long)} {}
-
-    Typestring(const std::vector<unsigned char>& v)
-      :c_endian {no_endian_char}, c_type {'u'}, len {sizeof(unsigned char)} {}
-    Typestring(const std::vector<unsigned short>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned short)} {}
-    Typestring(const std::vector<unsigned int>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned int)} {}
-    Typestring(const std::vector<unsigned long>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long)} {}
-    Typestring(const std::vector<unsigned long long>& v)
-      :c_endian {host_endian_char}, c_type {'u'}, len {sizeof(unsigned long long)} {}
-
-    Typestring(const std::vector<std::complex<float>>& v)
-      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<float>)} {}
-    Typestring(const std::vector<std::complex<double>>& v)
-      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<double>)} {}
-    Typestring(const std::vector<std::complex<long double>>& v)
-      :c_endian {host_endian_char}, c_type {'c'}, len {sizeof(std::complex<long double>)} {}
+  inline std::string operator()() const {
+    const size_t max_buflen = 16;
+    char buf[max_buflen];
+    std::sprintf(buf, "%c%c%u", c_endian, c_type, len);
+    return std::string(buf);
+  };
 };
+
+template<typename T> struct has_typestring{ 
+    static const bool value=false;
+};
+template<> struct has_typestring<float>{ 
+    static const bool value=true;
+    static constexpr Typestring_ str {host_endian_char, 'f', sizeof(float)};
+};
+template<> struct has_typestring<double>{ 
+    static const bool value=true;
+    static constexpr Typestring_ str {host_endian_char, 'f', sizeof(double)};
+};
+*/
+
+// TODO: implement as constexpr
+inline std::string format_typestr(char c_endian, char c_type, int len) {
+    const size_t max_buflen = 16;
+    char buf[max_buflen];
+    std::sprintf(buf, "%c%c%u", c_endian, c_type, len);
+    return std::string(buf);
+}
+
+
+template<typename T> struct has_typestring{ 
+  static const bool value=false;
+};
+template<> struct has_typestring<float>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'f', sizeof(float));};
+};
+template<> struct has_typestring<double>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'f', sizeof(double));};
+};
+template<> struct has_typestring<long double>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'f', sizeof(long double));};
+};
+
+template<> struct has_typestring<char>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(no_endian_char, 'i', sizeof(char));};
+};
+template<> struct has_typestring<short>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(short));};
+};
+template<> struct has_typestring<int>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(int));};
+};
+template<> struct has_typestring<long>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(long));};
+};
+template<> struct has_typestring<long long>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(long long));};
+};
+
+template<> struct has_typestring<unsigned char>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(no_endian_char, 'u', sizeof(unsigned char));};
+};
+template<> struct has_typestring<unsigned short>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned short));};
+};
+template<> struct has_typestring<unsigned int>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned int));};
+};
+template<> struct has_typestring<unsigned long>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned long));};
+};
+template<> struct has_typestring<unsigned long long>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned long long));};
+};
+
+template<> struct has_typestring<std::complex<float>>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'c', sizeof(std::complex<float>));};
+};
+template<> struct has_typestring<std::complex<double>>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'c', sizeof(std::complex<double>));};
+};
+template<> struct has_typestring<std::complex<long double>>{ 
+  static const bool value=true;
+  static std::string str() {return format_typestr(host_endian_char, 'c', sizeof(std::complex<long double>));};
+};
+
+
 
 inline void parse_typestring( std::string typestring){
   std::regex re ("'([<>|])([ifuc])(\\d+)'");
@@ -462,8 +522,8 @@ inline ndarray_len_t comp_size(const std::vector<ndarray_len_t>& shape) {
 template<typename Scalar>
 inline void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<Scalar>& data)
 {
-    Typestring typestring_o(data);
-    std::string typestring = typestring_o.str();
+    static_assert(has_typestring<Scalar>::value, "scalar type not understood");
+    std::string typestring = has_typestring<Scalar>::str();
 
     std::ofstream stream( filename, std::ofstream::binary);
     if(!stream) {
@@ -502,8 +562,9 @@ inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned
     parse_header(header, typestr, fortran_order, shape);
 
     // check if the typestring matches the given one
-    Typestring typestring_o {data};
-    std::string expect_typestr = typestring_o.str();
+    static_assert(has_typestring<Scalar>::value, "scalar type not understood");
+    std::string expect_typestr = has_typestring<Scalar>::str();
+
     if (typestr != expect_typestr) {
       throw std::runtime_error("formatting error: typestrings not matching");
     }
