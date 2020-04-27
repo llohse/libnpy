@@ -70,13 +70,21 @@ constexpr char host_endian_char = ( big_endian ?
 /* npy array length */
 typedef unsigned long int ndarray_len_t;
 
-inline void write_magic(std::ostream& ostream, unsigned char v_major=1, unsigned char v_minor=0) {
+typedef std::pair<char,char> version_t;
+
+struct header_t {
+  std::string descr;
+  bool fortran_order;
+  std::vector<ndarray_len_t> shape;
+};
+
+inline void write_magic(std::ostream& ostream, version_t version) {
   ostream.write(magic_string, magic_string_length);
-  ostream.put(v_major);
-  ostream.put(v_minor);
+  ostream.put(version.first);
+  ostream.put(version.second);
 }
 
-inline void read_magic(std::istream& istream, unsigned char& v_major, unsigned char& v_minor) {
+inline version_t read_magic(std::istream& istream) {
   char buf[magic_string_length+2];
   istream.read(buf, magic_string_length+2);
 
@@ -87,8 +95,11 @@ inline void read_magic(std::istream& istream, unsigned char& v_major, unsigned c
   if (0 != std::memcmp(buf, magic_string, magic_string_length))
     throw std::runtime_error("this file does not have a valid npy format.");
 
-  v_major = buf[magic_string_length];
-  v_minor = buf[magic_string_length+1];
+  version_t version;
+  version.first = buf[magic_string_length];
+  version.second = buf[magic_string_length+1];
+
+  return version;
 }
 
 // typestring magic
@@ -126,7 +137,6 @@ inline std::string format_typestr(char c_endian, char c_type, int len) {
     std::sprintf(buf, "%c%c%u", c_endian, c_type, len);
     return std::string(buf);
 }
-
 
 template<typename T> struct has_typestring{ 
   static const bool value=false;
@@ -373,7 +383,8 @@ inline std::string write_boolean(bool b) {
 } // namespace pyparse
 
 
-inline void parse_header(std::string header, std::string& descr, bool& fortran_order, std::vector<ndarray_len_t>& shape) {
+
+inline header_t parse_header(std::string header) {
   /*
      The first 6 bytes are a magic string: exactly "x93NUMPY".
      The next 1 byte is an unsigned byte: the major version number of the file format, e.g. x01.
@@ -410,20 +421,23 @@ inline void parse_header(std::string header, std::string& descr, bool& fortran_o
   // TODO: extract info from typestring
   parse_typestring(descr_s);
   // remove 
-  descr = npy::pyparse::parse_str(descr_s);
+  std::string descr = npy::pyparse::parse_str(descr_s);
 
   // convert literal Python bool to C++ bool
-  fortran_order = npy::pyparse::parse_bool(fortran_s);
+  bool fortran_order = npy::pyparse::parse_bool(fortran_s);
 
   // parse the shape tuple
   auto shape_v = npy::pyparse::parse_tuple(shape_s);
   if (shape_v.size() == 0)
     throw std::runtime_error("invalid shape tuple in header");
 
+  std::vector<ndarray_len_t> shape;
   for ( auto item : shape_v ) {
     ndarray_len_t dim = static_cast<ndarray_len_t>(std::stoul(item));
     shape.push_back(dim);
   }
+
+  return {descr, fortran_order, shape};
 }
 
 
@@ -434,26 +448,25 @@ inline std::string write_header_dict(const std::string& descr, bool fortran_orde
     return "{'descr': '" + descr + "', 'fortran_order': " + s_fortran_order + ", 'shape': " + shape_s + ", }";
 }
 
-inline void write_header(std::ostream& out, const std::string& descr, bool fortran_order, const std::vector<ndarray_len_t>& shape_v)
+inline void write_header(std::ostream& out, const header_t& header)
 {
-    std::string header_dict = write_header_dict(descr, fortran_order, shape_v);
+    std::string header_dict = write_header_dict(header.descr, header.fortran_order, header.shape);
 
     size_t length = magic_string_length + 2 + 2 + header_dict.length() + 1;
 
-    unsigned char version[2] = {1, 0};
+    version_t version {1, 0};
     if (length >= 255*255) {
       length = magic_string_length + 2 + 4 + header_dict.length() + 1;
-      version[0] = 2;
-      version[1] = 0;
+      version = {2, 0};
     }
     size_t padding_len = 16 - length % 16;
     std::string padding (padding_len, ' ');
 
     // write magic
-    write_magic(out, version[0], version[1]);
+    write_magic(out, version);
 
     // write header length
-    if (version[0] == 1 && version[1] == 0) {
+    if (version == version_t{1, 0} ) {
       char header_len_le16[2];
       uint16_t header_len = static_cast<uint16_t>(header_dict.length() + padding.length() + 1);
 
@@ -476,11 +489,10 @@ inline void write_header(std::ostream& out, const std::string& descr, bool fortr
 
 inline std::string read_header(std::istream& istream) {
     // check magic bytes an version number
-    unsigned char v_major, v_minor;
-    read_magic(istream, v_major, v_minor);
+    version_t version = read_magic(istream);
 
     uint32_t header_length;
-    if(v_major == 1 && v_minor == 0){
+    if( version == version_t{1, 0}){
 
       char header_len_le16[2];
       istream.read(header_len_le16, 2);
@@ -489,7 +501,7 @@ inline std::string read_header(std::istream& istream) {
       if((magic_string_length + 2 + 2 + header_length) % 16 != 0) {
           // TODO: display warning
       }
-    }else if(v_major == 2 && v_minor == 0) {
+    }else if( version == version_t{2, 0}) {
       char header_len_le32[4];
       istream.read(header_len_le32, 4);
 
@@ -531,7 +543,8 @@ inline void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, u
     }
 
     std::vector<ndarray_len_t> shape_v(shape, shape+n_dims);
-    write_header(stream, typestring, fortran_order, shape_v);
+    header_t header {typestring, fortran_order, shape_v};
+    write_header(stream, header);
 
     auto size = static_cast<size_t>(comp_size(shape_v));
 
@@ -554,21 +567,21 @@ inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned
         throw std::runtime_error("io error: failed to open a file.");
     }
 
-    std::string header = read_header(stream);
+    std::string header_s = read_header(stream);
 
     // parse header
-    std::string typestr;
-
-    parse_header(header, typestr, fortran_order, shape);
+    header_t header = parse_header(header_s);
 
     // check if the typestring matches the given one
     static_assert(has_typestring<Scalar>::value, "scalar type not understood");
     std::string expect_typestr = has_typestring<Scalar>::str();
 
-    if (typestr != expect_typestr) {
+    if (header.descr != expect_typestr) {
       throw std::runtime_error("formatting error: typestrings not matching");
     }
 
+    shape = header.shape;
+    fortran_order = header.fortran_order;
 
     // compute the data size based on the shape
     auto size = static_cast<size_t>(comp_size(shape));
