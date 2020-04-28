@@ -33,9 +33,9 @@
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
-#include <regex>
 #include <unordered_map>
 #include <type_traits>
+#include <iterator>
 
 
 namespace npy {
@@ -63,6 +63,9 @@ const char little_endian_char = '<';
 const char big_endian_char = '>';
 const char no_endian_char = '|';
 
+constexpr std::array<char,3> endian_chars = { little_endian_char, big_endian_char, no_endian_char };
+constexpr std::array<char,4> numtype_chars = { 'f', 'i', 'u', 'c' };
+
 constexpr char host_endian_char = ( big_endian ? 
     big_endian_char : 
     little_endian_char );
@@ -72,8 +75,23 @@ typedef unsigned long int ndarray_len_t;
 
 typedef std::pair<char,char> version_t;
 
+struct dtype_t {
+  char byteorder;
+  char kind;
+  unsigned int itemsize;
+
+// TODO: implement as constexpr
+  inline std::string str() const {
+    const size_t max_buflen = 16;
+    char buf[max_buflen];
+    std::sprintf(buf, "%c%c%u", byteorder, kind, itemsize);
+    return std::string(buf);
+  }
+};
+
+
 struct header_t {
-  std::string descr;
+  dtype_t dtype;
   bool fortran_order;
   std::vector<ndarray_len_t> shape;
 };
@@ -103,123 +121,128 @@ inline version_t read_magic(std::istream& istream) {
 }
 
 // typestring magic
-/*
-struct Typestring_ {
-  const char c_endian;
-  const char c_type;
-  const int  len;
-
-  inline std::string operator()() const {
-    const size_t max_buflen = 16;
-    char buf[max_buflen];
-    std::sprintf(buf, "%c%c%u", c_endian, c_type, len);
-    return std::string(buf);
-  };
-};
-
-template<typename T> struct has_typestring{ 
-    static const bool value=false;
-};
-template<> struct has_typestring<float>{ 
-    static const bool value=true;
-    static constexpr Typestring_ str {host_endian_char, 'f', sizeof(float)};
-};
-template<> struct has_typestring<double>{ 
-    static const bool value=true;
-    static constexpr Typestring_ str {host_endian_char, 'f', sizeof(double)};
-};
-*/
-
-// TODO: implement as constexpr
-inline std::string format_typestr(char c_endian, char c_type, int len) {
-    const size_t max_buflen = 16;
-    char buf[max_buflen];
-    std::sprintf(buf, "%c%c%u", c_endian, c_type, len);
-    return std::string(buf);
-}
 
 template<typename T> struct has_typestring{ 
   static const bool value=false;
 };
 template<> struct has_typestring<float>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'f', sizeof(float));};
+  static constexpr dtype_t dtype = {host_endian_char, 'f', sizeof(float)};
 };
+constexpr dtype_t has_typestring<float>::dtype;
 template<> struct has_typestring<double>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'f', sizeof(double));};
+  static constexpr dtype_t dtype = {host_endian_char, 'f', sizeof(double)};
 };
+constexpr dtype_t has_typestring<double>::dtype;
 template<> struct has_typestring<long double>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'f', sizeof(long double));};
+  static constexpr dtype_t dtype = {host_endian_char, 'f', sizeof(long double)};
 };
+constexpr dtype_t has_typestring<long double>::dtype;
 
 template<> struct has_typestring<char>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(no_endian_char, 'i', sizeof(char));};
+  static constexpr dtype_t dtype = {no_endian_char, 'i', sizeof(char)};
 };
+constexpr dtype_t has_typestring<char>::dtype;
 template<> struct has_typestring<short>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(short));};
+  static constexpr dtype_t dtype = {host_endian_char, 'i', sizeof(short)};
 };
+constexpr dtype_t has_typestring<short>::dtype;
 template<> struct has_typestring<int>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(int));};
+  static constexpr dtype_t dtype = {host_endian_char, 'i', sizeof(int)};
 };
+constexpr dtype_t has_typestring<int>::dtype;
 template<> struct has_typestring<long>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(long));};
+  static constexpr dtype_t dtype = {host_endian_char, 'i', sizeof(long)};
 };
+constexpr dtype_t has_typestring<long>::dtype;
 template<> struct has_typestring<long long>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'i', sizeof(long long));};
+  static constexpr dtype_t dtype = {host_endian_char, 'i', sizeof(long long)};
 };
+constexpr dtype_t has_typestring<long long>::dtype;
 
 template<> struct has_typestring<unsigned char>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(no_endian_char, 'u', sizeof(unsigned char));};
+  static constexpr dtype_t dtype = {no_endian_char, 'u', sizeof(unsigned char)};
 };
+constexpr dtype_t has_typestring<unsigned char>::dtype;
 template<> struct has_typestring<unsigned short>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned short));};
+  static constexpr dtype_t dtype = {host_endian_char, 'u', sizeof(unsigned short)};
 };
+constexpr dtype_t has_typestring<unsigned short>::dtype;
 template<> struct has_typestring<unsigned int>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned int));};
+  static constexpr dtype_t dtype = {host_endian_char, 'u', sizeof(unsigned int)};
 };
+constexpr dtype_t has_typestring<unsigned int>::dtype;
 template<> struct has_typestring<unsigned long>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned long));};
+  static constexpr dtype_t dtype = {host_endian_char, 'u', sizeof(unsigned long)};
 };
+constexpr dtype_t has_typestring<unsigned long>::dtype;
 template<> struct has_typestring<unsigned long long>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'u', sizeof(unsigned long long));};
+  static constexpr dtype_t dtype = {host_endian_char, 'u', sizeof(unsigned long long)};
 };
+constexpr dtype_t has_typestring<unsigned long long>::dtype;
 
 template<> struct has_typestring<std::complex<float>>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'c', sizeof(std::complex<float>));};
+  static constexpr dtype_t dtype = {host_endian_char, 'c', sizeof(std::complex<float>)};
 };
+constexpr dtype_t has_typestring<std::complex<float>>::dtype;
 template<> struct has_typestring<std::complex<double>>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'c', sizeof(std::complex<double>));};
+  static constexpr dtype_t dtype = {host_endian_char, 'c', sizeof(std::complex<double>)};
 };
+constexpr dtype_t has_typestring<std::complex<double>>::dtype;
 template<> struct has_typestring<std::complex<long double>>{ 
   static const bool value=true;
-  static std::string str() {return format_typestr(host_endian_char, 'c', sizeof(std::complex<long double>));};
+  static constexpr dtype_t dtype = {host_endian_char, 'c', sizeof(std::complex<long double>)};
 };
+constexpr dtype_t has_typestring<std::complex<long double>>::dtype;
 
 
+// helpers
+inline bool is_digits(const std::string &str) {
+  return std::all_of(str.begin(), str.end(), ::isdigit);
+}
 
-inline void parse_typestring( std::string typestring){
-  std::regex re ("'([<>|])([ifuc])(\\d+)'");
-  std::smatch sm;
+template <typename T, size_t N>
+inline bool in_array(T val, const std::array<T,N> & arr) {
+  return std::find(std::begin(arr), std::end(arr), val) != std::end(arr);
+}
 
-  std::regex_match(typestring, sm, re );
-
-  if ( sm.size() != 4 ) {
-    throw std::runtime_error("invalid typestring");
+inline dtype_t parse_descr(std::string typestring){
+  if ( typestring.length() < 3 ) {
+    throw std::runtime_error("invalid typestring (length)");
   }
+
+  char byteorder_c = typestring.at(0);
+  char kind_c = typestring.at(1);
+  std::string itemsize_s = typestring.substr(2);
+
+  if (! in_array(byteorder_c, endian_chars)) {
+    throw std::runtime_error("invalid typestring (byteorder)");
+  }
+
+  if (! in_array(kind_c, numtype_chars)) {
+    throw std::runtime_error("invalid typestring (kind)");
+  }
+
+  if(! is_digits(itemsize_s)) {
+    throw std::runtime_error("invalid typestring (itemsize)");
+  }
+  unsigned int itemsize = std::stoul(itemsize_s);
+
+  return {byteorder_c, kind_c, itemsize};
 }
 
 namespace pyparse {
@@ -418,10 +441,8 @@ inline header_t parse_header(std::string header) {
   std::string fortran_s = dict_map["fortran_order"];
   std::string shape_s = dict_map["shape"];
 
-  // TODO: extract info from typestring
-  parse_typestring(descr_s);
-  // remove 
   std::string descr = npy::pyparse::parse_str(descr_s);
+  dtype_t dtype = parse_descr(descr);
 
   // convert literal Python bool to C++ bool
   bool fortran_order = npy::pyparse::parse_bool(fortran_s);
@@ -437,7 +458,7 @@ inline header_t parse_header(std::string header) {
     shape.push_back(dim);
   }
 
-  return {descr, fortran_order, shape};
+  return {dtype, fortran_order, shape};
 }
 
 
@@ -450,7 +471,7 @@ inline std::string write_header_dict(const std::string& descr, bool fortran_orde
 
 inline void write_header(std::ostream& out, const header_t& header)
 {
-    std::string header_dict = write_header_dict(header.descr, header.fortran_order, header.shape);
+    std::string header_dict = write_header_dict(header.dtype.str(), header.fortran_order, header.shape);
 
     size_t length = magic_string_length + 2 + 2 + header_dict.length() + 1;
 
@@ -535,7 +556,7 @@ template<typename Scalar>
 inline void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[], const std::vector<Scalar>& data)
 {
     static_assert(has_typestring<Scalar>::value, "scalar type not understood");
-    std::string typestring = has_typestring<Scalar>::str();
+    dtype_t dtype = has_typestring<Scalar>::dtype;
 
     std::ofstream stream( filename, std::ofstream::binary);
     if(!stream) {
@@ -543,7 +564,7 @@ inline void SaveArrayAsNumpy( const std::string& filename, bool fortran_order, u
     }
 
     std::vector<ndarray_len_t> shape_v(shape, shape+n_dims);
-    header_t header {typestring, fortran_order, shape_v};
+    header_t header {dtype, fortran_order, shape_v};
     write_header(stream, header);
 
     auto size = static_cast<size_t>(comp_size(shape_v));
@@ -574,9 +595,10 @@ inline void LoadArrayFromNumpy(const std::string& filename, std::vector<unsigned
 
     // check if the typestring matches the given one
     static_assert(has_typestring<Scalar>::value, "scalar type not understood");
-    std::string expect_typestr = has_typestring<Scalar>::str();
+    std::string expect_descr = has_typestring<Scalar>::dtype.str();
 
-    if (header.descr != expect_typestr) {
+    // TODO: implement != and == for dtype_t
+    if (header.dtype.str() != expect_descr) {
       throw std::runtime_error("formatting error: typestrings not matching");
     }
 
