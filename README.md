@@ -20,12 +20,12 @@ It also allows *reading* .npy files, although only a very limited subset of data
  - complex floating point (std::complex<float>, ...)
 
 ## Usage
-'''
+```c++
 #include "libnpy.hpp"
 
 // TODO: include example code here
+```
 
-'''
 See `test/` for examples.
 C++11 is required. If you use g++, use `-std=c++11`.
 
@@ -36,3 +36,6 @@ C++11 is required. If you use g++, use `-std=c++11`.
 
 ## Contributing
 Feel free to send me a pull request, open an issue, or contact me directly.
+
+## License
+The project is licensed under the [MIT](LICENSE) license
