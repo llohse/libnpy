@@ -147,6 +147,11 @@ template<> struct has_typestring<char>{
   static constexpr dtype_t dtype = {no_endian_char, 'i', sizeof(char)};
 };
 constexpr dtype_t has_typestring<char>::dtype;
+template<> struct has_typestring<signed char>{ 
+  static const bool value=true;
+  static constexpr dtype_t dtype = {no_endian_char, 'i', sizeof(signed char)};
+};
+constexpr dtype_t has_typestring<signed char>::dtype;
 template<> struct has_typestring<short>{ 
   static const bool value=true;
   static constexpr dtype_t dtype = {host_endian_char, 'i', sizeof(short)};
