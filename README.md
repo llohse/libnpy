@@ -21,7 +21,7 @@ It also allows *reading* .npy files, although only a very limited subset of data
 
 ## Usage
 ```c++
-#include "libnpy.hpp"
+#include "npy.hpp"
 
 // TODO: include example code here
 ```
