@@ -7,4 +7,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Test
-        run: cd tests && make
+        run: python3 -m pip install numpy && cd tests && make
