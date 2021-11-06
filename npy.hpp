@@ -341,7 +341,7 @@ inline std::string get_value_from_map(const std::string &mapstr) {
 
    The keys need to be known and may not appear anywhere else in the data.
  */
-inline std::unordered_map <std::string, std::string> parse_dict(std::string in, std::vector <std::string> &keys) {
+inline std::unordered_map <std::string, std::string> parse_dict(std::string in, const std::vector <std::string> &keys) {
 
   std::unordered_map <std::string, std::string> map;
 
