@@ -91,6 +91,10 @@ struct dtype_t {
     std::sprintf(buf, "%c%c%u", byteorder, kind, itemsize);
     return std::string(buf);
   }
+
+  inline std::tuple<const char, const char, const unsigned int> tie() const {
+    return std::tie(byteorder, kind, itemsize);
+  }
 };
 
 
@@ -657,10 +661,8 @@ inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned
 
   // check if the typestring matches the given one
   static_assert(has_typestring<Scalar>::value, "scalar type not understood");
-  std::string expect_descr = has_typestring<Scalar>::dtype.str();
 
-  // TODO(llohse): implement != and == for dtype_t
-  if (header.dtype.str() != expect_descr) {
+  if (header.dtype.tie() != has_typestring<Scalar>::dtype.tie()) {
     throw std::runtime_error("formatting error: typestrings not matching");
   }
 
