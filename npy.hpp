@@ -80,9 +80,9 @@ typedef unsigned long int ndarray_len_t;
 typedef std::pair<char, char> version_t;
 
 struct dtype_t {
-  char byteorder;
-  char kind;
-  unsigned int itemsize;
+  const char byteorder;
+  const char kind;
+  const unsigned int itemsize;
 
 // TODO(llohse): implement as constexpr
   inline std::string str() const {
@@ -95,9 +95,9 @@ struct dtype_t {
 
 
 struct header_t {
-  dtype_t dtype;
-  bool fortran_order;
-  std::vector <ndarray_len_t> shape;
+  const dtype_t dtype;
+  const bool fortran_order;
+  const std::vector <ndarray_len_t> shape;
 };
 
 inline void write_magic(std::ostream &ostream, version_t version) {
