@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "../npy.hpp"
+#include "npy.hpp"
 
 using namespace std;
 
