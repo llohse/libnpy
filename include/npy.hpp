@@ -38,6 +38,7 @@
 #include <type_traits>
 #include <iterator>
 #include <utility>
+#include <valarray>
 
 
 namespace npy {
@@ -88,7 +89,7 @@ struct dtype_t {
   inline std::string str() const {
     const size_t max_buflen = 16;
     char buf[max_buflen];
-    std::sprintf(buf, "%c%c%u", byteorder, kind, itemsize);
+    sprintf_s(buf, "%c%c%u", byteorder, kind, itemsize);
     return std::string(buf);
   }
 
@@ -619,7 +620,7 @@ inline ndarray_len_t comp_size(const std::vector <ndarray_len_t> &shape) {
 
 template<typename Scalar>
 inline void
-SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
+SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const std::vector<ndarray_len_t> shape,
                  const std::vector <Scalar> &data) {
   static_assert(has_typestring<Scalar>::value, "scalar type not understood");
   dtype_t dtype = has_typestring<Scalar>::dtype;
@@ -629,7 +630,7 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
     throw std::runtime_error("io error: failed to open a file.");
   }
 
-  std::vector <ndarray_len_t> shape_v(shape, shape + n_dims);
+  std::vector <ndarray_len_t> shape_v(shape.begin(), shape.begin() + n_dims);
   header_t header{dtype, fortran_order, shape_v};
   write_header(stream, header);
 
@@ -638,17 +639,10 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
   stream.write(reinterpret_cast<const char *>(data.data()), sizeof(Scalar) * size);
 }
 
-
 template<typename Scalar>
-inline void
-LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, std::vector <Scalar> &data) {
-  bool fortran_order;
-  LoadArrayFromNumpy<Scalar>(filename, shape, fortran_order, data);
-}
-
-template<typename Scalar>
-inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, bool &fortran_order,
-                               std::vector <Scalar> &data) {
+inline void 
+LoadArrayFromNumpy(const std::string &filename, bool& fortran_order, unsigned int& n_dims, std::vector<ndarray_len_t> &shape,
+                 std::vector <Scalar> &data) {
   std::ifstream stream(filename, std::ifstream::binary);
   if (!stream) {
     throw std::runtime_error("io error: failed to open a file.");
@@ -671,10 +665,76 @@ inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned
 
   // compute the data size based on the shape
   auto size = static_cast<size_t>(comp_size(shape));
+  n_dims = size;
   data.resize(size);
 
   // read the data
   stream.read(reinterpret_cast<char *>(data.data()), sizeof(Scalar) * size);
+}
+
+// valarray support
+template<typename Scalar>
+inline void
+SaveArrayAsNumpy(
+    const std::string& filename, 
+    const bool& fortran_order, 
+    const unsigned int& n_dims, 
+    const std::vector<ndarray_len_t>& shape,
+    const std::valarray <Scalar>& data) {
+
+    static_assert(has_typestring<Scalar>::value, "scalar type not understood");
+    dtype_t dtype = has_typestring<Scalar>::dtype;
+
+    std::ofstream stream(filename, std::ofstream::binary);
+    if (!stream) {
+        throw std::runtime_error("io error: failed to open a file.");
+    }
+
+    std::vector <ndarray_len_t> shape_v(shape.begin(), shape.begin() + n_dims);
+    header_t header{ dtype, fortran_order, shape_v };
+    write_header(stream, header);
+
+    auto size = static_cast<size_t>(comp_size(shape_v));
+
+    stream.write(reinterpret_cast<const char*>(&data[0]), sizeof(Scalar) * size);
+}
+
+template<typename Scalar>
+inline void
+LoadArrayFromNumpy(
+    const std::string& filename, 
+    bool& fortran_order, 
+    unsigned int& n_dims, 
+    std::vector<ndarray_len_t>& shape,
+    std::valarray <Scalar>& data) {
+
+    std::ifstream stream(filename, std::ifstream::binary);
+    if (!stream) {
+        throw std::runtime_error("io error: failed to open a file.");
+    }
+
+    std::string header_s = read_header(stream);
+
+    // parse header
+    header_t header = parse_header(header_s);
+
+    // check if the typestring matches the given one
+    static_assert(has_typestring<Scalar>::value, "scalar type not understood");
+
+    if (header.dtype.tie() != has_typestring<Scalar>::dtype.tie()) {
+        throw std::runtime_error("formatting error: typestrings not matching");
+    }
+
+    shape = header.shape;
+    n_dims = shape.size();
+    fortran_order = header.fortran_order;
+
+    // compute the data size based on the shape
+    auto size = static_cast<size_t>(comp_size(shape));
+    data.resize(size);
+
+    // read the data
+    stream.read(reinterpret_cast<char*>(&data[0]), sizeof(Scalar) * size);
 }
 
 }  // namespace npy

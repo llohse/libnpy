@@ -1,0 +1,7 @@
+.vs
+.vscode
+*.sln
+*.vcxproj*
+x86
+x64
+data/*.npy

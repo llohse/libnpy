@@ -26,6 +26,15 @@ It also allows *reading* .npy files, although only a very limited subset of data
 // TODO: include example code here
 ```
 
+## For ValArray
+```c++
+#include "ValArray.hpp"
+
+npy::ValArray<double> A; 
+// This is a valarray class which can save and load npy files.
+
+```
+
 See `test/` for examples.
 C++11 is required. If you use g++, use `-std=c++11`.
 
@@ -39,3 +48,4 @@ Feel free to send me a pull request, open an issue, or contact me directly.
 
 ## License
 The project is licensed under the [MIT](LICENSE) license
+
