@@ -88,7 +88,7 @@ struct dtype_t {
   inline std::string str() const {
     const size_t max_buflen = 16;
     char buf[max_buflen];
-    std::sprintf(buf, "%c%c%u", byteorder, kind, itemsize);
+    std::snprintf(buf, max_buflen, "%c%c%u", byteorder, kind, itemsize);
     return std::string(buf);
   }
 
