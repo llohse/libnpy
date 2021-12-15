@@ -445,7 +445,7 @@ inline std::vector <std::string> parse_tuple(std::string in) {
 template<typename T>
 inline std::string write_tuple(const std::vector <T> &v) {
   if (v.size() == 0)
-    return "";
+    return "()";
 
   std::ostringstream ss;
 
@@ -515,8 +515,6 @@ inline header_t parse_header(std::string header) {
 
   // parse the shape tuple
   auto shape_v = npy::pyparse::parse_tuple(shape_s);
-  if (shape_v.size() == 0)
-    throw std::runtime_error("invalid shape tuple in header");
 
   std::vector <ndarray_len_t> shape;
   for (auto item : shape_v) {
