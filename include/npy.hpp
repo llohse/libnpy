@@ -620,7 +620,7 @@ inline ndarray_len_t comp_size(const std::vector <ndarray_len_t> &shape) {
 template<typename Scalar>
 inline void
 SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
-                 const std::vector <Scalar> &data) {
+                 const Scalar* data) {
   static_assert(has_typestring<Scalar>::value, "scalar type not understood");
   dtype_t dtype = has_typestring<Scalar>::dtype;
 
@@ -635,9 +635,15 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
 
   auto size = static_cast<size_t>(comp_size(shape_v));
 
-  stream.write(reinterpret_cast<const char *>(data.data()), sizeof(Scalar) * size);
+  stream.write(reinterpret_cast<const char *>(data), sizeof(Scalar) * size);
 }
 
+template<typename Scalar>
+inline void
+SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
+                 const std::vector <Scalar> &data) {
+  SaveArrayAsNumpy(filename, fortran_order, n_dims, shape, data.data());
+}
 
 template<typename Scalar>
 inline void
