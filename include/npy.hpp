@@ -88,7 +88,7 @@ struct dtype_t {
   inline std::string str() const {
     const size_t max_buflen = 16;
     char buf[max_buflen];
-    std::sprintf(buf, "%c%c%u", byteorder, kind, itemsize);
+    std::snprintf(buf, max_buflen, "%c%c%u", byteorder, kind, itemsize);
     return std::string(buf);
   }
 
@@ -445,7 +445,7 @@ inline std::vector <std::string> parse_tuple(std::string in) {
 template<typename T>
 inline std::string write_tuple(const std::vector <T> &v) {
   if (v.size() == 0)
-    return "";
+    return "()";
 
   std::ostringstream ss;
 
@@ -515,8 +515,6 @@ inline header_t parse_header(std::string header) {
 
   // parse the shape tuple
   auto shape_v = npy::pyparse::parse_tuple(shape_s);
-  if (shape_v.size() == 0)
-    throw std::runtime_error("invalid shape tuple in header");
 
   std::vector <ndarray_len_t> shape;
   for (auto item : shape_v) {
@@ -620,7 +618,7 @@ inline ndarray_len_t comp_size(const std::vector <ndarray_len_t> &shape) {
 template<typename Scalar>
 inline void
 SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
-                 const std::vector <Scalar> &data) {
+                 const Scalar* data) {
   static_assert(has_typestring<Scalar>::value, "scalar type not understood");
   dtype_t dtype = has_typestring<Scalar>::dtype;
 
@@ -635,9 +633,15 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
 
   auto size = static_cast<size_t>(comp_size(shape_v));
 
-  stream.write(reinterpret_cast<const char *>(data.data()), sizeof(Scalar) * size);
+  stream.write(reinterpret_cast<const char *>(data), sizeof(Scalar) * size);
 }
 
+template<typename Scalar>
+inline void
+SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
+                 const std::vector <Scalar> &data) {
+  SaveArrayAsNumpy(filename, fortran_order, n_dims, shape, data.data());
+}
 
 template<typename Scalar>
 inline void
