@@ -552,14 +552,14 @@ inline void write_header(std::ostream &out, const header_t &header) {
 
   // write header length
   if (version == version_t{1, 0}) {
-    char header_len_le16[2];
+    uint8_t header_len_le16[2];
     uint16_t header_len = static_cast<uint16_t>(header_dict.length() + padding.length() + 1);
 
     header_len_le16[0] = (header_len >> 0) & 0xff;
     header_len_le16[1] = (header_len >> 8) & 0xff;
     out.write(reinterpret_cast<char *>(header_len_le16), 2);
   } else {
-    char header_len_le32[4];
+    uint8_t header_len_le32[4];
     uint32_t header_len = static_cast<uint32_t>(header_dict.length() + padding.length() + 1);
 
     header_len_le32[0] = (header_len >> 0) & 0xff;
@@ -578,16 +578,16 @@ inline std::string read_header(std::istream &istream) {
 
   uint32_t header_length;
   if (version == version_t{1, 0}) {
-    char header_len_le16[2];
-    istream.read(header_len_le16, 2);
+    uint8_t header_len_le16[2];
+    istream.read(reinterpret_cast<char *>(header_len_le16), 2);
     header_length = (header_len_le16[0] << 0) | (header_len_le16[1] << 8);
 
     if ((magic_string_length + 2 + 2 + header_length) % 16 != 0) {
       // TODO(llohse): display warning
     }
   } else if (version == version_t{2, 0}) {
-    char header_len_le32[4];
-    istream.read(header_len_le32, 4);
+    uint8_t header_len_le32[4];
+    istream.read(reinterpret_cast<char *>(header_len_le32), 4);
 
     header_length = (header_len_le32[0] << 0) | (header_len_le32[1] << 8)
                     | (header_len_le32[2] << 16) | (header_len_le32[3] << 24);
