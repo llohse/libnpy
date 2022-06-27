@@ -5,41 +5,6 @@
 #include "npy.hpp"
 
 using namespace std;
-
-int test_load(void) {
-  vector<unsigned long> shape;
-  bool fortran_order;
-  vector<double> data;
-
-  vector<const char*> allpaths {
-    "data/matrix_f8.npy",
-    "data/matrix_f8_t.npy",
-    "data/empty_f8.npy",
-    "data/empty_f8_t.npy",
-    "data/scalar_f8.npy",
-    "data/scalar_f8_t.npy",
-  };
-
-  for (auto path : allpaths) {
-    shape.clear();
-    data.clear();
-    npy::LoadArrayFromNumpy(path, shape, fortran_order, data);
-
-    cout << "shape: ";
-    for (size_t i = 0; i<shape.size(); i++)
-      cout << shape[i] << ", ";
-    cout << endl;
-    cout << "fortran order: " << (fortran_order ? "+" : "-");
-    cout << endl;
-    cout << "data: ";
-    for (size_t i = 0; i<data.size(); i++)
-      cout << data[i] << ", ";
-    cout << endl << endl;
-  }
-
-  return 0;
-}
-
 int test_save(void) {
   const vector<double> data1 {1, 2, 3, 4, 5, 6};
   array<long unsigned, 2> leshape11 {{2,3}};
@@ -64,10 +29,7 @@ int test_save(void) {
 }
 
 int main() {
-  test_load();
-
   test_save();
 
   return 0;
 }
-
