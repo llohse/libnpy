@@ -24,6 +24,7 @@ jobs:
       - run: meson setup builddir/
         env:
           CC: gcc
+      - run: pip install numpy
       - run: meson test -C builddir/ -v
       - uses: actions/upload-artifact@v1
         if: failure()
