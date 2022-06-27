@@ -1,8 +1,15 @@
 project('libnpy-tests', 'cpp',
-        default_options : ['cpp_std=c++11'])
+        default_options : ['cpp_std=c++14', 'warning_level=3'])
 
 pymod = import('python')
 python = pymod.find_installation('python3', required : true)
+
+
+catch2_dep = dependency('catch2', required : false)
+if not catch2_dep.found()
+  catch2_proj = subproject('catch2')
+  catch2_dep = catch2_proj.get_variable('catch2_dep')
+endif
 
 datafiles = [ 
 'bool.npy',
@@ -87,7 +94,7 @@ gen_data = custom_target('gen-data',
 libnpy_inc = include_directories('../include')
 #libnpy_dep = declare_dependency(include_directories : libnpy_inc)
 
-src = ['test.cpp', '../include/npy.hpp']
-exe = executable('test-read', sources : src, include_directories : libnpy_inc)
+src = ['test-read.cpp', '../include/npy.hpp']
+exe = executable('test-read', sources : src, include_directories : libnpy_inc, dependencies : catch2_dep)
 
 test('test read', exe, depends : gen_data)
