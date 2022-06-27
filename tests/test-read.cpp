@@ -9,10 +9,10 @@
 #define CATCH_CONFIG_MAIN
 #include "catch2/catch.hpp"
 
-const std::vector<unsigned long> expect_shape {{2, 3}};
-const std::vector<unsigned long> expect_shape_t {{3, 2}};
-const std::vector<int> expect_data_int {{1, 2, 3, 4, 5, 6}};
-const std::vector<bool> expect_data_bool {{false, true, false, true, false, true}};
+const std::vector<unsigned long> expect_shape {2, 3};
+const std::vector<unsigned long> expect_shape_t {3, 2};
+const std::vector<int> expect_data_int {1, 2, 3, 4, 5, 6};
+const std::vector<bool> expect_data_bool {false, true, false, true, false, true};
 const int expect_scalar = 42;
 
 template <typename Scalar>

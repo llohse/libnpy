@@ -94,7 +94,15 @@ gen_data = custom_target('gen-data',
 libnpy_inc = include_directories('../include')
 #libnpy_dep = declare_dependency(include_directories : libnpy_inc)
 
-src = ['test-read.cpp', '../include/npy.hpp']
-exe = executable('test-read', sources : src, include_directories : libnpy_inc, dependencies : catch2_dep)
+read_src = ['test-read.cpp', '../include/npy.hpp']
+read_exe = executable('test-read', sources : read_src, 
+                       include_directories : libnpy_inc, 
+		       dependencies : catch2_dep)
 
-test('test read', exe, depends : gen_data)
+save_src = ['test-save.cpp', '../include/npy.hpp']
+save_exe = executable('test-save', sources : save_src, 
+                       include_directories : libnpy_inc, 
+		       dependencies : catch2_dep)
+
+test('test read', read_exe, depends : gen_data)
+test('test save', save_exe, depends : gen_data)
