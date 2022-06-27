@@ -36,6 +36,8 @@
 #include <algorithm>
 #include <unordered_map>
 #include <type_traits>
+#include <typeinfo>
+#include <typeindex>
 #include <iterator>
 #include <utility>
 
@@ -128,154 +130,25 @@ inline version_t read_magic(std::istream &istream) {
   return version;
 }
 
-// typestring magic
-
-template<typename T>
-struct has_typestring {
-  static const bool value = false;
+const std::unordered_map<std::type_index, dtype_t> dtype_map = {
+  {std::type_index(typeid(float)), {host_endian_char, 'f', sizeof(float)}},
+  {std::type_index(typeid(double)), {host_endian_char, 'f', sizeof(double)}},
+  {std::type_index(typeid(long double)), {host_endian_char, 'f', sizeof(long double)}},
+  {std::type_index(typeid(char)), {no_endian_char, 'i', sizeof(char)}},
+  {std::type_index(typeid(signed char)), {no_endian_char, 'i', sizeof(signed char)}},
+  {std::type_index(typeid(short)), {host_endian_char, 'i', sizeof(short)}},
+  {std::type_index(typeid(int)), {host_endian_char, 'i', sizeof(int)}},
+  {std::type_index(typeid(long)), {host_endian_char, 'i', sizeof(long)}},
+  {std::type_index(typeid(long long)), {host_endian_char, 'i', sizeof(long long)}},
+  {std::type_index(typeid(unsigned char)), {no_endian_char, 'u', sizeof(unsigned char)}},
+  {std::type_index(typeid(unsigned short)), {host_endian_char, 'u', sizeof(unsigned short)}},
+  {std::type_index(typeid(unsigned int)), {host_endian_char, 'u', sizeof(unsigned int)}},
+  {std::type_index(typeid(unsigned long)), {host_endian_char, 'u', sizeof(unsigned long)}},
+  {std::type_index(typeid(unsigned long long)), {host_endian_char, 'u', sizeof(unsigned long long)}},
+  {std::type_index(typeid(std::complex<float>)), {host_endian_char, 'c', sizeof(std::complex<float>)}},
+  {std::type_index(typeid(std::complex<double>)), {host_endian_char, 'c', sizeof(std::complex<double>)}},
+  {std::type_index(typeid(std::complex<long double>)), {host_endian_char, 'c', sizeof(std::complex<long double>)}}
 };
-template<>
-struct has_typestring<float> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'f', sizeof(float)};
-};
-constexpr dtype_t
-has_typestring<float>::dtype;
-template<>
-struct has_typestring<double> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'f', sizeof(double)};
-};
-constexpr dtype_t
-has_typestring<double>::dtype;
-template<>
-struct has_typestring<long double> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'f', sizeof(long double)};
-};
-constexpr dtype_t
-has_typestring<long double>::dtype;
-
-template<>
-struct has_typestring<char> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {no_endian_char, 'i', sizeof(char)};
-};
-constexpr dtype_t
-has_typestring<char>::dtype;
-template<>
-struct has_typestring<signed char> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {no_endian_char, 'i', sizeof(signed char)};
-};
-constexpr dtype_t
-has_typestring<signed char>::dtype;
-template<>
-struct has_typestring<short> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'i', sizeof(short)};
-};
-constexpr dtype_t
-has_typestring<short>::dtype;
-template<>
-struct has_typestring<int> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'i', sizeof(int)};
-};
-constexpr dtype_t
-has_typestring<int>::dtype;
-template<>
-struct has_typestring<long> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'i', sizeof(long)};
-};
-constexpr dtype_t
-has_typestring<long>::dtype;
-template<>
-struct has_typestring<long long> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'i', sizeof(long long)};
-};
-constexpr dtype_t
-has_typestring<long long>::dtype;
-
-template<>
-struct has_typestring<unsigned char> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {no_endian_char, 'u', sizeof(unsigned char)};
-};
-constexpr dtype_t
-has_typestring<unsigned char>::dtype;
-template<>
-struct has_typestring<unsigned short> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'u', sizeof(unsigned short)};
-};
-constexpr dtype_t
-has_typestring<unsigned short>::dtype;
-template<>
-struct has_typestring<unsigned int> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'u', sizeof(unsigned int)};
-};
-constexpr dtype_t
-has_typestring<unsigned int>::dtype;
-template<>
-struct has_typestring<unsigned long> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'u', sizeof(unsigned long)};
-};
-constexpr dtype_t
-has_typestring<unsigned long>::dtype;
-template<>
-struct has_typestring<unsigned long long> {
-  static const bool value = true;
-  static constexpr dtype_t
-  dtype = {host_endian_char, 'u', sizeof(unsigned long long)};
-};
-constexpr dtype_t
-has_typestring<unsigned long long>::dtype;
-
-template<>
-struct has_typestring<std::complex < float>> {
-static const bool value = true;
-static constexpr dtype_t
-dtype = {host_endian_char, 'c', sizeof(std::complex < float > )};
-};
-constexpr dtype_t
-has_typestring<std::complex < float>>
-::dtype;
-template<>
-struct has_typestring<std::complex < double>>{
-static const bool value = true;
-static constexpr dtype_t
-dtype = {host_endian_char, 'c', sizeof(std::complex < double > )};
-};
-constexpr dtype_t
-has_typestring<std::complex < double>>
-::dtype;
-template<>
-struct has_typestring<std::complex < long double>>{
-static const bool value = true;
-static constexpr dtype_t
-dtype = {host_endian_char, 'c', sizeof(std::complex < long double > )};
-};
-constexpr dtype_t
-has_typestring<std::complex < long double>>
-::dtype;
 
 
 // helpers
@@ -619,8 +492,8 @@ template<typename Scalar>
 inline void
 SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
                  const Scalar* data) {
-  static_assert(has_typestring<Scalar>::value, "scalar type not understood");
-  dtype_t dtype = has_typestring<Scalar>::dtype;
+//  static_assert(has_typestring<Scalar>::value, "scalar type not understood");
+  const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
 
   std::ofstream stream(filename, std::ofstream::binary);
   if (!stream) {
@@ -664,9 +537,10 @@ inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned
   header_t header = parse_header(header_s);
 
   // check if the typestring matches the given one
-  static_assert(has_typestring<Scalar>::value, "scalar type not understood");
+//  static_assert(has_typestring<Scalar>::value, "scalar type not understood");
+  const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
 
-  if (header.dtype.tie() != has_typestring<Scalar>::dtype.tie()) {
+  if (header.dtype.tie() != dtype.tie()) {
     throw std::runtime_error("formatting error: typestrings not matching");
   }
 
