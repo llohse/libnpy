@@ -25,13 +25,14 @@ Reading data:
 ```c++
 #include "npy.hpp"
 #include <vector>
+#include <string>
 
 int main() {
-  vector<unsigned long> shape;
+  std::vector<unsigned long> shape {};
   bool fortran_order;
-  vector<double> data;
+  std::vector<double> data;
   
-  const char * path = "data.npy";
+  const std::string path {"data.npy"};
   npy::LoadArrayFromNumpy(path, shape, fortran_order, data);
 }
 
@@ -41,21 +42,20 @@ Writing data:
 ```c++
 #include "npy.hpp"
 #include <vector>
-#include <array>
+#include <string>
 
 int main() {
-  vector<unsigned long> shape;
-  
-  const char * path = "out.npy";
+  const std::vector<long unsigned> shape{2, 3};
+  const bool fortran_order{false};
+  const std::string path{"out.npy"};
 
-  const vector<double> data1 {1, 2, 3, 4, 5, 6};
-  array<long unsigned, 2> leshape {{2,3}};
-  npy::SaveArrayAsNumpy(path, false, leshape.size(), leshape.data(), data1);
+  const std::vector<double> data1{1, 2, 3, 4, 5, 6};
+  npy::SaveArrayAsNumpy(path, fortran_order, shape.size(), shape.data(), data1);
 }
 
 ```
 
-See `test/` for examples.
+See `test/` for further examples.
 C++11 is required. If you use g++, use `-std=c++11`.
 
 ## Known limitations
