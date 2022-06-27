@@ -20,10 +20,39 @@ It also allows *reading* .npy files, although only a very limited subset of data
  - complex floating point (std::complex<float>, ...)
 
 ## Usage
+
+Reading data:
 ```c++
 #include "npy.hpp"
+#include <vector>
 
-// TODO: include example code here
+int main() {
+  vector<unsigned long> shape;
+  bool fortran_order;
+  vector<double> data;
+  
+  const char * path = "data.npy";
+  npy::LoadArrayFromNumpy(path, shape, fortran_order, data);
+}
+
+```
+
+Writing data:
+```c++
+#include "npy.hpp"
+#include <vector>
+#include <array>
+
+int main() {
+  vector<unsigned long> shape;
+  
+  const char * path = "out.npy";
+
+  const vector<double> data1 {1, 2, 3, 4, 5, 6};
+  array<long unsigned, 2> leshape {{2,3}};
+  npy::SaveArrayAsNumpy(path, false, leshape.size(), leshape.data(), data1);
+}
+
 ```
 
 See `test/` for examples.
