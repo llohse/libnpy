@@ -256,5 +256,5 @@ TEST_CASE( "Load _empty_ single precision data", "[read]" ) {
 }
 
 TEST_CASE( "Load _empty_ single precision data with wrong data type", "[read]" ) {
-  REQUIRE_THROWS_WITH([](){auto d = test_load<float>("data/empty_i8.npy");}, Catch::Matchers::Contains("typestrings not matching"));
+  REQUIRE_THROWS_WITH([](){auto d = test_load<float>("data/empty_i8.npy");}(), "formatting error: typestrings not matching");
 }
