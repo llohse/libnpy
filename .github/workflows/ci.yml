@@ -29,7 +29,7 @@ jobs:
         if: failure()
         with:
           name: Linux_Meson_Testlog
-          path: builddir/meson-logs/testlog.txt
+          path: tests/builddir/meson-logs/testlog.txt
 
 
 
