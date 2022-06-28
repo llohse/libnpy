@@ -5,11 +5,7 @@ pymod = import('python')
 python = pymod.find_installation('python3', required : true)
 
 
-catch2_dep = dependency('catch2', required : false)
-if not catch2_dep.found()
-  catch2_proj = subproject('catch2')
-  catch2_dep = catch2_proj.get_variable('catch2_dep')
-endif
+catch2_dep = dependency('catch2')
 
 datafiles = [ 
 'bool.npy',
