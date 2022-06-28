@@ -20,6 +20,9 @@ It also allows *reading* .npy files, although only a very limited subset of data
  - complex floating point (std::complex<float>, ...)
 
 ## Usage
+libnpy is a header only library. You only need to download `npy.hpp` into your include path. Neither special compiler flags nor a specific build system are required.
+
+Optional: If you use meson, you can use the provided `meson.build` file to declare the dependency on libnpy.
 
 Reading data:
 ```c++
@@ -57,6 +60,15 @@ int main() {
 
 See `test/` for further examples.
 C++11 is required. If you use g++, use `-std=c++11`.
+
+## Tests
+The tests can be build with `meson>=0.55` and depend on catch2.
+```
+cd tests
+meson setup builddir
+meson test -Cbuilddir
+```
+
 
 ## Known limitations
 1. Only a few data types are supported.
