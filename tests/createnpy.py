@@ -25,4 +25,5 @@ for d in dtypes:
 
 booldata = [ [False, True, False], [True, False, True], ]
 a = numpy.array(booldata, numpy.dtype(bool))
-numpy.save('data/' + 'bool' + ".npy", a)
+numpy.save("data/bool.npy", a)
+numpy.save("data/bool_t.npy", a.T)
