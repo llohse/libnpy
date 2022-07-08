@@ -77,9 +77,9 @@ constexpr char host_endian_char = (big_endian ?
                                    little_endian_char);
 
 /* npy array length */
-typedef unsigned long int ndarray_len_t;
+using ndarray_len_t = unsigned long;
 
-typedef std::pair<char, char> version_t;
+using version_t = std::pair<char, char>;
 
 struct dtype_t {
   const char byteorder;
@@ -391,7 +391,7 @@ inline header_t parse_header(std::string header) {
 
   std::vector <ndarray_len_t> shape;
   for (auto item : shape_v) {
-    ndarray_len_t dim = static_cast<ndarray_len_t>(std::stoul(item));
+    auto dim = static_cast<ndarray_len_t>(std::stoul(item));
     shape.push_back(dim);
   }
 
@@ -426,14 +426,16 @@ inline void write_header(std::ostream &out, const header_t &header) {
   // write header length
   if (version == version_t{1, 0}) {
     uint8_t header_len_le16[2];
-    uint16_t header_len = static_cast<uint16_t>(header_dict.length() + padding.length() + 1);
+    auto header_len =
+        static_cast<uint16_t>(header_dict.length() + padding.length() + 1);
 
     header_len_le16[0] = (header_len >> 0) & 0xff;
     header_len_le16[1] = (header_len >> 8) & 0xff;
     out.write(reinterpret_cast<char *>(header_len_le16), 2);
   } else {
     uint8_t header_len_le32[4];
-    uint32_t header_len = static_cast<uint32_t>(header_dict.length() + padding.length() + 1);
+    auto header_len =
+        static_cast<uint32_t>(header_dict.length() + padding.length() + 1);
 
     header_len_le32[0] = (header_len >> 0) & 0xff;
     header_len_le32[1] = (header_len >> 8) & 0xff;
@@ -449,7 +451,7 @@ inline std::string read_header(std::istream &istream) {
   // check magic bytes an version number
   version_t version = read_magic(istream);
 
-  uint32_t header_length;
+  uint32_t header_length = 0;
   if (version == version_t{1, 0}) {
     uint8_t header_len_le16[2];
     istream.read(reinterpret_cast<char *>(header_len_le16), 2);
@@ -519,7 +521,7 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
 template<typename Scalar>
 inline void
 LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, std::vector <Scalar> &data) {
-  bool fortran_order;
+  bool fortran_order = 0;
   LoadArrayFromNumpy<Scalar>(filename, shape, fortran_order, data);
 }
 
