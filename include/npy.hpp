@@ -520,7 +520,7 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
 template<typename Scalar>
 inline void
 LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, std::vector <Scalar> &data) {
-  bool fortran_order = 0;
+  bool fortran_order{};
   LoadArrayFromNumpy<Scalar>(filename, shape, fortran_order, data);
 }
 
