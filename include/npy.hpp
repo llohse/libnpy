@@ -60,8 +60,8 @@ const bool big_endian = false;
 #endif
 
 
-const char magic_string[] = "\x93NUMPY";
 const size_t magic_string_length = 6;
+const std::array<char, magic_string_length> magic_string {'\x93', 'N', 'U', 'M', 'P', 'Y'};
 
 const char little_endian_char = '<';
 const char big_endian_char = '>';
@@ -88,10 +88,9 @@ struct dtype_t {
 
 // TODO(llohse): implement as constexpr
   inline std::string str() const {
-    const size_t max_buflen = 16;
-    char buf[max_buflen];
-    std::snprintf(buf, max_buflen, "%c%c%u", byteorder, kind, itemsize);
-    return std::string(buf);
+    std::array<char, 16> buf{};
+    std::snprintf(buf.data(), buf.size(), "%c%c%u", byteorder, kind, itemsize);
+    return std::string{std::begin(buf), std::end(buf)};
   }
 
   inline std::tuple<const char, const char, const unsigned int> tie() const {
@@ -107,20 +106,20 @@ struct header_t {
 };
 
 inline void write_magic(std::ostream &ostream, version_t version) {
-  ostream.write(magic_string, magic_string_length);
+  ostream.write(magic_string.data(), magic_string.size());
   ostream.put(version.first);
   ostream.put(version.second);
 }
 
 inline version_t read_magic(std::istream &istream) {
-  char buf[magic_string_length + 2];
-  istream.read(buf, magic_string_length + 2);
+  std::array<char, magic_string_length + 2> buf {};
+  istream.read(buf.data(), buf.size());
 
   if (!istream) {
     throw std::runtime_error("io error: failed reading file");
   }
 
-  if (0 != std::memcmp(buf, magic_string, magic_string_length))
+  if (! std::equal(std::begin(magic_string), std::end(magic_string), std::begin(buf)))
     throw std::runtime_error("this file does not have a valid npy format.");
 
   version_t version;
@@ -425,15 +424,15 @@ inline void write_header(std::ostream &out, const header_t &header) {
 
   // write header length
   if (version == version_t{1, 0}) {
-    uint8_t header_len_le16[2];
+    std::array<uint8_t, 2> header_len_le16{};
     auto header_len =
         static_cast<uint16_t>(header_dict.length() + padding.length() + 1);
 
     header_len_le16[0] = (header_len >> 0) & 0xff;
     header_len_le16[1] = (header_len >> 8) & 0xff;
-    out.write(reinterpret_cast<char *>(header_len_le16), 2);
+    out.write(reinterpret_cast<char *>(header_len_le16.data()), 2);
   } else {
-    uint8_t header_len_le32[4];
+    std::array<uint8_t, 4> header_len_le32{};
     auto header_len =
         static_cast<uint32_t>(header_dict.length() + padding.length() + 1);
 
@@ -441,7 +440,7 @@ inline void write_header(std::ostream &out, const header_t &header) {
     header_len_le32[1] = (header_len >> 8) & 0xff;
     header_len_le32[2] = (header_len >> 16) & 0xff;
     header_len_le32[3] = (header_len >> 24) & 0xff;
-    out.write(reinterpret_cast<char *>(header_len_le32), 4);
+    out.write(reinterpret_cast<char *>(header_len_le32.data()), 4);
   }
 
   out << header_dict << padding << '\n';
@@ -453,16 +452,16 @@ inline std::string read_header(std::istream &istream) {
 
   uint32_t header_length = 0;
   if (version == version_t{1, 0}) {
-    uint8_t header_len_le16[2];
-    istream.read(reinterpret_cast<char *>(header_len_le16), 2);
+    std::array<uint8_t, 2> header_len_le16{};
+    istream.read(reinterpret_cast<char *>(header_len_le16.data()), 2);
     header_length = (header_len_le16[0] << 0) | (header_len_le16[1] << 8);
 
     if ((magic_string_length + 2 + 2 + header_length) % 16 != 0) {
       // TODO(llohse): display warning
     }
   } else if (version == version_t{2, 0}) {
-    uint8_t header_len_le32[4];
-    istream.read(reinterpret_cast<char *>(header_len_le32), 4);
+    std::array<uint8_t, 4> header_len_le32{};
+    istream.read(reinterpret_cast<char *>(header_len_le32.data()), 4);
 
     header_length = (header_len_le32[0] << 0) | (header_len_le32[1] << 8)
                     | (header_len_le32[2] << 16) | (header_len_le32[3] << 24);
