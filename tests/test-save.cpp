@@ -4,12 +4,12 @@
 #include <vector>
 #include "npy.hpp"
 
-int test_save(void) {
+int test_save() {
   const std::vector<double> data1 {1, 2, 3, 4, 5, 6};
   std::array<long unsigned, 2> leshape11 {2, 3};
   std::array<long unsigned, 1> leshape12 {6};
 
-  const double data2[] {7};
+  const std::vector<double> data2 = {7};
   std::array<long unsigned, 3> leshape21 {1, 1, 1};
   std::array<long unsigned, 0> leshape22 {};
 

@@ -17,12 +17,12 @@ const int expect_scalar = 42;
 
 template <typename Scalar>
 std::vector<Scalar> cast_data(const std::vector<int> &input){
-  std::vector<Scalar> output;
+  std::vector<Scalar> output {};
   output.resize(input.size());
   std::transform(input.cbegin(), 
-		 input.cend(),
-		 output.begin(),
-		 [](int i) { return static_cast<Scalar>(i); });
+      input.cend(),
+      output.begin(),
+      [](int i) { return static_cast<Scalar>(i); });
   return output;
 }
 
