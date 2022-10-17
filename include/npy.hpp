@@ -472,8 +472,7 @@ inline std::string read_header(std::istream &istream) {
     throw std::runtime_error("unsupported file format version");
   }
 
-  auto buf_v = std::vector<char>();
-  buf_v.reserve(header_length);
+  auto buf_v = std::vector<char>(header_length);
   istream.read(buf_v.data(), header_length);
   std::string header(buf_v.data(), header_length);
 
