@@ -516,13 +516,6 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
 }
 
 template<typename Scalar>
-inline void
-LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, std::vector <Scalar> &data) {
-  bool fortran_order;
-  LoadArrayFromNumpy<Scalar>(filename, shape, fortran_order, data);
-}
-
-template<typename Scalar>
 inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, bool &fortran_order,
                                std::vector <Scalar> &data) {
   std::ifstream stream(filename, std::ifstream::binary);
@@ -552,6 +545,13 @@ inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned
 
   // read the data
   stream.read(reinterpret_cast<char *>(data.data()), sizeof(Scalar) * size);
+}
+
+template<typename Scalar>
+inline void
+LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, std::vector <Scalar> &data) {
+  bool fortran_order;
+  LoadArrayFromNumpy<Scalar>(filename, shape, fortran_order, data);
 }
 
 }  // namespace npy
