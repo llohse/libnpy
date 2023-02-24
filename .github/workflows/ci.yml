@@ -26,7 +26,7 @@ jobs:
           CC: gcc
       - run: pip install numpy
       - run: meson test -C builddir/ -v
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: Linux_Meson_Testlog
