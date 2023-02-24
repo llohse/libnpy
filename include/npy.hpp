@@ -88,10 +88,9 @@ struct dtype_t {
 
 // TODO(llohse): implement as constexpr
   inline std::string str() const {
-    const size_t max_buflen = 16;
-    char buf[max_buflen];
-    std::snprintf(buf, max_buflen, "%c%c%u", byteorder, kind, itemsize);
-    return std::string(buf);
+    std::stringstream ss;
+    ss << byteorder << kind << itemsize;
+    return ss.str();
   }
 
   inline std::tuple<const char, const char, const unsigned int> tie() const {
