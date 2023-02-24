@@ -498,7 +498,7 @@ template <typename Scalar>
 struct npy_data_ptr {
   std::vector<unsigned long> shape;
   bool fortran_order;
-  Scalar *data_ptr;
+  const Scalar *data_ptr;
 };
 
 template<typename Scalar>
@@ -521,7 +521,7 @@ inline npy_data<Scalar> read_npy(const std::string &filename) {
   }
 
   // compute the data size based on the shape
-  auto size = static_cast<size_t>(comp_size(shape));
+  auto size = static_cast<size_t>(comp_size(header.shape));
 
   npy_data<Scalar> data;
 
@@ -557,7 +557,7 @@ write_npy(const std::string &filename, const npy_data<Scalar> &data) {
 
 template<typename Scalar>
 inline void
-write_npy(const std::string &filename, const npy_data<Scalar> &data_ptr) {
+write_npy(const std::string &filename, const npy_data_ptr<Scalar> &data_ptr) {
   const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
 
   std::ofstream stream(filename, std::ofstream::binary);
@@ -565,12 +565,12 @@ write_npy(const std::string &filename, const npy_data<Scalar> &data_ptr) {
     throw std::runtime_error("io error: failed to open a file.");
   }
 
-  header_t header{dtype, data.fortran_order, data.shape};
+  header_t header{dtype, data_ptr.fortran_order, data_ptr.shape};
   write_header(stream, header);
 
-  auto size = static_cast<size_t>(comp_size(data.shape));
+  auto size = static_cast<size_t>(comp_size(data_ptr.shape));
 
-  stream.write(reinterpret_cast<const char *>(data.data_ptr), sizeof(Scalar) * size);
+  stream.write(reinterpret_cast<const char *>(data_ptr.data_ptr), sizeof(Scalar) * size);
 }
 
 // old interface
@@ -579,15 +579,13 @@ template<typename Scalar>
 inline void
 SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
                  const Scalar* data) {
-  npy_data_ptr<Scalar> ptr;
-  ptr.shape = {shape, shape + n_dims}
-  ptr.fortran_order = fortran_order;
-  ptr.data = data;
+  const npy_data_ptr<Scalar> ptr {
+    {shape, shape + n_dims},
+    fortran_order,
+    data
+  };
 
-  header_t header{dtype, fortran_order, shape_v};
-  write_header(stream, header);
-
-  write_npy(filename, ptr);
+  write_npy<Scalar>(filename, ptr);
 }
 
 template<typename Scalar>
@@ -601,12 +599,12 @@ template<typename Scalar>
 inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, bool &fortran_order,
                                std::vector <Scalar> &data) {
 
-  const npy_data<Scalar> n_data = read_npy(filename);
+  const npy_data<Scalar> n_data = read_npy<Scalar>(filename);
 
   shape = n_data.shape;
   fortran_order = n_data.fortran_order;
 
-  std::copy(n_data.begin(), n_data.end(), std::back_inserter(data));
+  std::copy(n_data.data.begin(), n_data.data.end(), std::back_inserter(data));
 
 }
 
