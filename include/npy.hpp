@@ -1,5 +1,6 @@
 /*
    Copyright 2017 Leon Merten Lohse
+   Copyright 2023 Arm Limited
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -489,23 +490,30 @@ inline ndarray_len_t comp_size(const std::vector <ndarray_len_t> &shape) {
 
 template<typename Scalar>
 inline void
+SaveArrayAsNumpy(std::ostream &out, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
+                 const Scalar* data) {
+  const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
+
+  std::vector <ndarray_len_t> shape_v(shape, shape + n_dims);
+  header_t header{dtype, fortran_order, shape_v};
+  write_header(out, header);
+
+  auto size = static_cast<size_t>(comp_size(shape_v));
+
+  out.write(reinterpret_cast<const char *>(data), sizeof(Scalar) * size);
+}
+
+template<typename Scalar>
+inline void
 SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims, const unsigned long shape[],
                  const Scalar* data) {
 //  static_assert(has_typestring<Scalar>::value, "scalar type not understood");
-  const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
-
   std::ofstream stream(filename, std::ofstream::binary);
   if (!stream) {
     throw std::runtime_error("io error: failed to open a file.");
   }
 
-  std::vector <ndarray_len_t> shape_v(shape, shape + n_dims);
-  header_t header{dtype, fortran_order, shape_v};
-  write_header(stream, header);
-
-  auto size = static_cast<size_t>(comp_size(shape_v));
-
-  stream.write(reinterpret_cast<const char *>(data), sizeof(Scalar) * size);
+  SaveArrayAsNumpy(stream, fortran_order, n_dims, shape, data);
 }
 
 template<typename Scalar>
@@ -516,17 +524,12 @@ SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n
 }
 
 template<typename Scalar>
-inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, bool &fortran_order,
-                               std::vector <Scalar> &data) {
-  std::ifstream stream(filename, std::ifstream::binary);
-  if (!stream) {
-    throw std::runtime_error("io error: failed to open a file.");
-  }
-
-  std::string header_s = read_header(stream);
+inline void LoadArrayFromNumpy(std::istream &stream, std::vector<unsigned long> &shape, bool &fortran_order,
+                               std::vector<Scalar> &data) {
+  std::string header_s = npy::read_header(stream);
 
   // parse header
-  header_t header = parse_header(header_s);
+  npy::header_t header = npy::parse_header(header_s);
 
   // check if the typestring matches the given one
 //  static_assert(has_typestring<Scalar>::value, "scalar type not understood");
@@ -539,12 +542,23 @@ inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned
   shape = header.shape;
   fortran_order = header.fortran_order;
 
-  // compute the data size based on the shape
+  // Compute size of the data from the shape
   auto size = static_cast<size_t>(comp_size(shape));
   data.resize(size);
 
   // read the data
   stream.read(reinterpret_cast<char *>(data.data()), sizeof(Scalar) * size);
+}
+
+template<typename Scalar>
+inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned long> &shape, bool &fortran_order,
+                               std::vector <Scalar> &data) {
+  std::ifstream stream(filename, std::ifstream::binary);
+  if (!stream) {
+    throw std::runtime_error("io error: failed to open a file.");
+  }
+
+  LoadArrayFromNumpy(stream, shape, fortran_order, data);
 }
 
 template<typename Scalar>
