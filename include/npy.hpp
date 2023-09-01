@@ -546,6 +546,7 @@ inline void write_npy(const std::string &filename, const npy_data_ptr<Scalar> &d
 
 // old interface
 
+// NOLINTBEGIN(*-avoid-c-arrays)
 template <typename Scalar>
 inline void SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims,
                              const unsigned long shape[], const Scalar *data) {
@@ -577,6 +578,7 @@ inline void LoadArrayFromNumpy(const std::string &filename, std::vector<unsigned
   bool fortran_order = false;
   LoadArrayFromNumpy<Scalar>(filename, shape, fortran_order, data);
 }
+// NOLINTEND(*-avoid-c-arrays)
 
 }  // namespace npy
 
