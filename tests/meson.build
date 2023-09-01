@@ -95,10 +95,10 @@ read_exe = executable('test-read', sources : read_src,
                        include_directories : libnpy_inc, 
 		       dependencies : catch2_dep)
 
-save_src = ['test-save.cpp', '../include/npy.hpp']
-save_exe = executable('test-save', sources : save_src, 
+write_src = ['test-write.cpp', '../include/npy.hpp']
+write_exe = executable('test-write', sources : write_src, 
                        include_directories : libnpy_inc, 
 		       dependencies : catch2_dep)
 
 test('test read', read_exe, depends : gen_data)
-test('test save', save_exe, depends : gen_data)
+test('test write', write_exe, depends : gen_data)
