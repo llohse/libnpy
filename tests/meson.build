@@ -1,5 +1,5 @@
 project('libnpy-tests', 'cpp',
-        default_options : ['cpp_std=c++14', 'warning_level=3'])
+        default_options : ['cpp_std=c++17', 'warning_level=3'])
 
 pymod = import('python')
 python = pymod.find_installation('python3', required : true)
