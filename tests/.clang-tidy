@@ -1,7 +1,7 @@
 ---
 Checks:          'clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,modernize-*,-modernize-use-trailing-return-type,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-pro-type-reinterpret-cast'
 WarningsAsErrors: true
-HeaderFilterRegex: ''
+HeaderFilterRegex: 'include/npy.hpp'
 AnalyzeTemporaryDtors: false
 FormatStyle:     google
 CheckOptions:

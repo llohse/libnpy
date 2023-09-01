@@ -5,25 +5,34 @@
 
 #include "npy.hpp"
 
-int test_save(void) {
+int test_save() {
   const std::vector<double> data1{1, 2, 3, 4, 5, 6};
-  std::array<long unsigned, 2> leshape11{2, 3};
-  std::array<long unsigned, 1> leshape12{6};
+  const std::vector<unsigned long> leshape11{2, 3};
+  const std::vector<unsigned long> leshape12{6};
 
-  const double data2[]{7};
-  std::array<long unsigned, 3> leshape21{1, 1, 1};
-  std::array<long unsigned, 0> leshape22{};
+  const npy::npy_data<double> data11{leshape11, false, data1};
+  write_npy("data/out11.npy", data11);
 
-  const std::array<double, 0> data3;
-  std::array<long unsigned, 2> leshape31{4, 0};
+  const npy::npy_data<double> data12{leshape12, false, data1};
+  write_npy("data/out12.npy", data12);
 
-  npy::SaveArrayAsNumpy("data/out11.npy", false, leshape11.size(), leshape11.data(), data1);
-  npy::SaveArrayAsNumpy("data/out12.npy", false, leshape12.size(), leshape12.data(), data1);
+  const npy::npy_data_ptr<double> data11_ptr{leshape11, false, data1.data()};
+  write_npy("data/out11_ptr.npy", data11_ptr);
 
-  npy::SaveArrayAsNumpy("data/out21.npy", false, leshape21.size(), leshape21.data(), data2);
-  npy::SaveArrayAsNumpy("data/out22.npy", false, leshape22.size(), leshape22.data(), data2);
+  const std::vector<double> data2{7};
+  const std::vector<unsigned long> leshape21{1, 1, 1};
+  const std::vector<unsigned long> leshape22{};
 
-  npy::SaveArrayAsNumpy("data/out31.npy", false, leshape31.size(), leshape31.data(), data3.data());
+  const npy::npy_data<double> data21{leshape21, false, data2};
+  write_npy("data/out21.npy", data21);
+  const npy::npy_data<double> data22{leshape22, false, data2};
+  write_npy("data/out22.npy", data22);
+
+  const std::vector<double> data3{};
+  const std::vector<unsigned long> leshape31{4, 0};
+
+  const npy::npy_data<double> data31{leshape31, false, data3};
+  write_npy("data/out31.npy", data31);
 
   return 0;
 }
