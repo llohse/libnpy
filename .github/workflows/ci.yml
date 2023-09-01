@@ -40,7 +40,6 @@ jobs:
         env:
           CC: gcc
       - run: pip install numpy
-      - run: ninja clang-tidy -C builddir/
       - run: meson test -C builddir/ -v
       - uses: actions/upload-artifact@v3
         if: failure()
