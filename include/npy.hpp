@@ -474,13 +474,8 @@ struct npy_data_ptr {
 };
 
 template <typename Scalar>
-inline npy_data<Scalar> read_npy(const std::string &filename) {
-  std::ifstream stream(filename, std::ifstream::binary);
-  if (!stream) {
-    throw std::runtime_error("io error: failed to open a file.");
-  }
-
-  std::string header_s = read_header(stream);
+inline npy_data<Scalar> read_npy(std::istream &in) {
+  std::string header_s = read_header(in);
 
   // parse header
   header_t header = parse_header(header_s);
@@ -503,45 +498,65 @@ inline npy_data<Scalar> read_npy(const std::string &filename) {
   data.data.resize(size);
 
   // read the data
-  stream.read(reinterpret_cast<char *>(data.data.data()), sizeof(Scalar) * size);
+  in.read(reinterpret_cast<char *>(data.data.data()), sizeof(Scalar) * size);
 
   return data;
 }
 
 template <typename Scalar>
-inline void write_npy(const std::string &filename, const npy_data<Scalar> &data) {
+inline npy_data<Scalar> read_npy(const std::string &filename) {
+  std::ifstream stream(filename, std::ifstream::binary);
+  if (!stream) {
+    throw std::runtime_error("io error: failed to open a file.");
+  }
+
+  return read_npy<Scalar>(stream);
+}
+
+template <typename Scalar>
+inline void write_npy(std::ostream &out, const npy_data<Scalar> &data) {
   //  static_assert(has_typestring<Scalar>::value, "scalar type not
   //  understood");
   const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
 
+  header_t header{dtype, data.fortran_order, data.shape};
+  write_header(out, header);
+
+  auto size = static_cast<size_t>(comp_size(data.shape));
+
+  out.write(reinterpret_cast<const char *>(data.data.data()), sizeof(Scalar) * size);
+}
+
+template <typename Scalar>
+inline void write_npy(const std::string &filename, const npy_data<Scalar> &data) {
   std::ofstream stream(filename, std::ofstream::binary);
   if (!stream) {
     throw std::runtime_error("io error: failed to open a file.");
   }
 
-  header_t header{dtype, data.fortran_order, data.shape};
-  write_header(stream, header);
+  write_npy<Scalar>(stream, data);
+}
 
-  auto size = static_cast<size_t>(comp_size(data.shape));
+template <typename Scalar>
+inline void write_npy(std::ostream &out, const npy_data_ptr<Scalar> &data_ptr) {
+  const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
 
-  stream.write(reinterpret_cast<const char *>(data.data.data()), sizeof(Scalar) * size);
+  header_t header{dtype, data_ptr.fortran_order, data_ptr.shape};
+  write_header(out, header);
+
+  auto size = static_cast<size_t>(comp_size(data_ptr.shape));
+
+  out.write(reinterpret_cast<const char *>(data_ptr.data_ptr), sizeof(Scalar) * size);
 }
 
 template <typename Scalar>
 inline void write_npy(const std::string &filename, const npy_data_ptr<Scalar> &data_ptr) {
-  const dtype_t dtype = dtype_map.at(std::type_index(typeid(Scalar)));
-
   std::ofstream stream(filename, std::ofstream::binary);
   if (!stream) {
     throw std::runtime_error("io error: failed to open a file.");
   }
 
-  header_t header{dtype, data_ptr.fortran_order, data_ptr.shape};
-  write_header(stream, header);
-
-  auto size = static_cast<size_t>(comp_size(data_ptr.shape));
-
-  stream.write(reinterpret_cast<const char *>(data_ptr.data_ptr), sizeof(Scalar) * size);
+  write_npy<Scalar>(stream, data_ptr);
 }
 
 // old interface
