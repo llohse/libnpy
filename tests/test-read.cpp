@@ -1,28 +1,26 @@
+#include <algorithm>
 #include <array>
+#include <complex>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <complex>
+
 #include "npy.hpp"
 
 #define CATCH_CONFIG_MAIN
 #include "catch2/catch.hpp"
 
-const std::vector<unsigned long> expect_shape {2, 3};
-const std::vector<unsigned long> expect_shape_t {3, 2};
-const std::vector<int> expect_data_int {1, 2, 3, 4, 5, 6};
-const std::vector<bool> expect_data_bool {false, true, false, true, false, true};
+const std::vector<unsigned long> expect_shape{2, 3};
+const std::vector<unsigned long> expect_shape_t{3, 2};
+const std::vector<int> expect_data_int{1, 2, 3, 4, 5, 6};
+const std::vector<bool> expect_data_bool{false, true, false, true, false, true};
 const int expect_scalar = 42;
 
 template <typename Scalar>
-std::vector<Scalar> cast_data(const std::vector<int> &input){
+std::vector<Scalar> cast_data(const std::vector<int> &input) {
   std::vector<Scalar> output;
   output.resize(input.size());
-  std::transform(input.cbegin(), 
-		 input.cend(),
-		 output.begin(),
-		 [](int i) { return static_cast<Scalar>(i); });
+  std::transform(input.cbegin(), input.cend(), output.begin(), [](int i) { return static_cast<Scalar>(i); });
   return output;
 }
 
@@ -34,13 +32,13 @@ struct npy_data {
 };
 
 template <typename Scalar>
-npy_data<Scalar> test_load(const char * path) {
+npy_data<Scalar> test_load(const char *path) {
   npy_data<Scalar> d;
   npy::LoadArrayFromNumpy(path, d.shape, d.fortran_order, d.data);
   return d;
 }
 
-TEST_CASE( "Load single precision data", "[read]" ) {
+TEST_CASE("Load single precision data", "[read]") {
   auto d = test_load<float>("data/matrix_f4.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -54,7 +52,7 @@ TEST_CASE( "Load single precision data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load double precision data", "[read]" ) {
+TEST_CASE("Load double precision data", "[read]") {
   auto d = test_load<double>("data/matrix_f8.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -68,7 +66,7 @@ TEST_CASE( "Load double precision data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load single precision complex data", "[read]" ) {
+TEST_CASE("Load single precision complex data", "[read]") {
   auto d = test_load<std::complex<float>>("data/matrix_c8.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -82,7 +80,7 @@ TEST_CASE( "Load single precision complex data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load double precision complex data", "[read]" ) {
+TEST_CASE("Load double precision complex data", "[read]") {
   auto d = test_load<std::complex<double>>("data/matrix_c16.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -96,7 +94,7 @@ TEST_CASE( "Load double precision complex data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load int8 data", "[read]" ) {
+TEST_CASE("Load int8 data", "[read]") {
   auto d = test_load<signed char>("data/matrix_i1.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -110,7 +108,7 @@ TEST_CASE( "Load int8 data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load int16 data", "[read]" ) {
+TEST_CASE("Load int16 data", "[read]") {
   auto d = test_load<signed short>("data/matrix_i2.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -124,7 +122,7 @@ TEST_CASE( "Load int16 data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load int32 data", "[read]" ) {
+TEST_CASE("Load int32 data", "[read]") {
   auto d = test_load<signed int>("data/matrix_i4.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -138,7 +136,7 @@ TEST_CASE( "Load int32 data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load int64 data", "[read]" ) {
+TEST_CASE("Load int64 data", "[read]") {
   auto d = test_load<signed long>("data/matrix_i8.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -152,7 +150,7 @@ TEST_CASE( "Load int64 data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load uint8 data", "[read]" ) {
+TEST_CASE("Load uint8 data", "[read]") {
   auto d = test_load<unsigned char>("data/matrix_u1.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -166,7 +164,7 @@ TEST_CASE( "Load uint8 data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load uint16 data", "[read]" ) {
+TEST_CASE("Load uint16 data", "[read]") {
   auto d = test_load<unsigned short>("data/matrix_u2.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -180,7 +178,7 @@ TEST_CASE( "Load uint16 data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load uint32 data", "[read]" ) {
+TEST_CASE("Load uint32 data", "[read]") {
   auto d = test_load<unsigned int>("data/matrix_u4.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -194,7 +192,7 @@ TEST_CASE( "Load uint32 data", "[read]" ) {
   REQUIRE(dt.fortran_order == true);
 }
 
-TEST_CASE( "Load uint64 data", "[read]" ) {
+TEST_CASE("Load uint64 data", "[read]") {
   auto d = test_load<unsigned long>("data/matrix_u8.npy");
 
   REQUIRE(d.shape == expect_shape);
@@ -225,7 +223,7 @@ TEST_CASE( "Load bool data", "[read]" ) {
 }
 */
 
-TEST_CASE( "Load _scalar_ single precision data", "[read]" ) {
+TEST_CASE("Load _scalar_ single precision data", "[read]") {
   auto d = test_load<float>("data/scalar_f4.npy");
 
   REQUIRE(d.shape.size() == 0);
@@ -241,7 +239,7 @@ TEST_CASE( "Load _scalar_ single precision data", "[read]" ) {
   REQUIRE(dt.fortran_order == false);
 }
 
-TEST_CASE( "Load _empty_ single precision data", "[read]" ) {
+TEST_CASE("Load _empty_ single precision data", "[read]") {
   auto d = test_load<float>("data/empty_f4.npy");
 
   REQUIRE(d.shape.size() == 2);
@@ -255,6 +253,7 @@ TEST_CASE( "Load _empty_ single precision data", "[read]" ) {
   REQUIRE(dt.fortran_order == false);
 }
 
-TEST_CASE( "Load _empty_ single precision data with wrong data type", "[read]" ) {
-  REQUIRE_THROWS_WITH([](){auto d = test_load<float>("data/empty_i8.npy");}(), "formatting error: typestrings not matching");
+TEST_CASE("Load _empty_ single precision data with wrong data type", "[read]") {
+  REQUIRE_THROWS_WITH([]() { auto d = test_load<float>("data/empty_i8.npy"); }(),
+                      "formatting error: typestrings not matching");
 }
