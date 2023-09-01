@@ -24,6 +24,8 @@ libnpy is a header only library. You only need to download `npy.hpp` into your i
 
 Optional: If you use meson, you can use the provided `meson.build` file to declare the dependency on libnpy.
 
+The API has changed in the last release. The old C-style API is still available, but might get removed in a future release.
+
 Reading data:
 ```c++
 #include "npy.hpp"
