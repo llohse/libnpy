@@ -31,12 +31,13 @@ Reading data:
 #include <string>
 
 int main() {
-  std::vector<unsigned long> shape {};
-  bool fortran_order;
-  std::vector<double> data;
   
   const std::string path {"data.npy"};
-  npy::LoadArrayFromNumpy(path, shape, fortran_order, data);
+  npy::npy_data d = npy::read_npy<double>(path);
+
+  std::vector<unsigned long> shape = d.shape;
+  bool fortran_order = d.fortran_order;
+  std::vector<double> data = d.data;
 }
 
 ```
@@ -50,10 +51,32 @@ Writing data:
 int main() {
   const std::vector<long unsigned> shape{2, 3};
   const bool fortran_order{false};
-  const std::string path{"out.npy"};
-
   const std::vector<double> data1{1, 2, 3, 4, 5, 6};
-  npy::SaveArrayAsNumpy(path, fortran_order, shape.size(), shape.data(), data1);
+
+  const npy::npy_data d { shape, fortran_order, data };
+
+  const std::string path{"out.npy"};
+  write_npy(path, d);
+}
+
+```
+
+This will involve an additional copy of the data, which might be undesireable for larger data. The copy can be avoided by using `npy::npy_data_ptr` as follows.
+
+```c++
+#include "npy.hpp"
+#include <vector>
+#include <string>
+
+int main() {
+  const std::vector<long unsigned> shape{2, 3};
+  const bool fortran_order{false};
+  const std::vector<double> data1{1, 2, 3, 4, 5, 6};
+
+  const npy::npy_data_ptr d { shape, fortran_order, data.data() };
+
+  const std::string path{"out.npy"};
+  write_npy(path, d);
 }
 
 ```
