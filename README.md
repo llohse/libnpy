@@ -37,9 +37,9 @@ int main() {
   const std::string path {"data.npy"};
   npy::npy_data d = npy::read_npy<double>(path);
 
+  std::vector<double> data = d.data;
   std::vector<unsigned long> shape = d.shape;
   bool fortran_order = d.fortran_order;
-  std::vector<double> data = d.data;
 }
 
 ```
@@ -51,11 +51,12 @@ Writing data:
 #include <string>
 
 int main() {
-  const std::vector<long unsigned> shape{2, 3};
-  const bool fortran_order{false};
-  const std::vector<double> data1{1, 2, 3, 4, 5, 6};
+  const std::vector<double> data{1, 2, 3, 4, 5, 6};
 
-  const npy::npy_data d { shape, fortran_order, data };
+  npy::npy_data d;
+  d.data = data;
+  d.shape = {2, 3};
+  d.fortran_order = false; // optional
 
   const std::string path{"out.npy"};
   write_npy(path, d);
@@ -71,11 +72,12 @@ This will involve an additional copy of the data, which might be undesireable fo
 #include <string>
 
 int main() {
-  const std::vector<long unsigned> shape{2, 3};
-  const bool fortran_order{false};
-  const std::vector<double> data1{1, 2, 3, 4, 5, 6};
+  const std::vector<double> data{1, 2, 3, 4, 5, 6};
 
-  const npy::npy_data_ptr d { shape, fortran_order, data.data() };
+  npy::npy_data_ptr d;
+  d.data_ptr = data.data();
+  d.shape = {2, 3};
+  d.fortran_order = false; // optional
 
   const std::string path{"out.npy"};
   write_npy(path, d);

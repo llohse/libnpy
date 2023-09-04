@@ -461,16 +461,16 @@ inline ndarray_len_t comp_size(const std::vector<ndarray_len_t> &shape) {
 
 template <typename Scalar>
 struct npy_data {
-  std::vector<unsigned long> shape;
+  std::vector<Scalar> data = {};
+  std::vector<unsigned long> shape = {};
   bool fortran_order = false;
-  std::vector<Scalar> data;
 };
 
 template <typename Scalar>
 struct npy_data_ptr {
-  std::vector<unsigned long> shape;
+  const Scalar *data_ptr = nullptr;
+  std::vector<unsigned long> shape = {};
   bool fortran_order = false;
-  const Scalar *data_ptr;
 };
 
 template <typename Scalar>
@@ -565,7 +565,7 @@ inline void write_npy(const std::string &filename, const npy_data_ptr<Scalar> &d
 template <typename Scalar>
 inline void SaveArrayAsNumpy(const std::string &filename, bool fortran_order, unsigned int n_dims,
                              const unsigned long shape[], const Scalar *data) {
-  const npy_data_ptr<Scalar> ptr{{shape, shape + n_dims}, fortran_order, data};
+  const npy_data_ptr<Scalar> ptr{data, {shape, shape + n_dims}, fortran_order};
 
   write_npy<Scalar>(filename, ptr);
 }
