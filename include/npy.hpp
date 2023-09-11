@@ -68,6 +68,7 @@ constexpr char host_endian_char = (big_endian ? big_endian_char : little_endian_
 
 /* npy array length */
 using ndarray_len_t = unsigned long int;
+using shape_t = std::vector<ndarray_len_t>;
 
 using version_t = std::pair<char, char>;
 
@@ -91,7 +92,7 @@ struct dtype_t {
 struct header_t {
   dtype_t dtype;
   bool fortran_order;
-  std::vector<ndarray_len_t> shape;
+  shape_t shape;
 };
 
 inline void write_magic(std::ostream &ostream, version_t version) {
@@ -366,7 +367,7 @@ inline header_t parse_header(std::string header) {
   // parse the shape tuple
   auto shape_v = npy::pyparse::parse_tuple(shape_s);
 
-  std::vector<ndarray_len_t> shape;
+  shape_t shape;
   for (auto item : shape_v) {
     auto dim = static_cast<ndarray_len_t>(std::stoul(item));
     shape.push_back(dim);
@@ -375,8 +376,7 @@ inline header_t parse_header(std::string header) {
   return {dtype, fortran_order, shape};
 }
 
-inline std::string write_header_dict(const std::string &descr, bool fortran_order,
-                                     const std::vector<ndarray_len_t> &shape) {
+inline std::string write_header_dict(const std::string &descr, bool fortran_order, const shape_t &shape) {
   std::string s_fortran_order = npy::pyparse::write_boolean(fortran_order);
   std::string shape_s = npy::pyparse::write_tuple(shape);
 
@@ -452,7 +452,7 @@ inline std::string read_header(std::istream &istream) {
   return header;
 }
 
-inline ndarray_len_t comp_size(const std::vector<ndarray_len_t> &shape) {
+inline ndarray_len_t comp_size(const shape_t &shape) {
   ndarray_len_t size = 1;
   for (ndarray_len_t i : shape) size *= i;
 
@@ -462,14 +462,14 @@ inline ndarray_len_t comp_size(const std::vector<ndarray_len_t> &shape) {
 template <typename Scalar>
 struct npy_data {
   std::vector<Scalar> data = {};
-  std::vector<unsigned long> shape = {};
+  shape_t shape = {};
   bool fortran_order = false;
 };
 
 template <typename Scalar>
 struct npy_data_ptr {
   const Scalar *data_ptr = nullptr;
-  std::vector<unsigned long> shape = {};
+  shape_t shape = {};
   bool fortran_order = false;
 };
 
