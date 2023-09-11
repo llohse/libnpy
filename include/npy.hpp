@@ -77,7 +77,6 @@ struct dtype_t {
   char kind;
   unsigned int itemsize;
 
-  // TODO(llohse): implement as constexpr
   [[nodiscard]] inline std::string str() const {
     std::stringstream ss;
     ss << byteorder << kind << itemsize;
