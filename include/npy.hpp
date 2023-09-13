@@ -77,13 +77,13 @@ struct dtype_t {
   char kind;
   unsigned int itemsize;
 
-  [[nodiscard]] inline std::string str() const {
+  inline std::string str() const {
     std::stringstream ss;
     ss << byteorder << kind << itemsize;
     return ss.str();
   }
 
-  [[nodiscard]] inline std::tuple<const char, const char, const unsigned int> tie() const {
+  inline std::tuple<const char, const char, const unsigned int> tie() const {
     return std::tie(byteorder, kind, itemsize);
   }
 };
