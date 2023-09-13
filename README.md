@@ -24,42 +24,69 @@ libnpy is a header only library. You only need to download `npy.hpp` into your i
 
 Optional: If you use meson, you can use the provided `meson.build` file to declare the dependency on libnpy.
 
-Reading data:
+The API has changed in the last release. The old C-style API is still available, but might get removed in the future.
+
+### Reading data:
 ```c++
 #include "npy.hpp"
 #include <vector>
 #include <string>
 
 int main() {
-  std::vector<unsigned long> shape {};
-  bool fortran_order;
-  std::vector<double> data;
   
   const std::string path {"data.npy"};
-  npy::LoadArrayFromNumpy(path, shape, fortran_order, data);
+  npy::npy_data d = npy::read_npy<double>(path);
+
+  std::vector<double> data = d.data;
+  std::vector<unsigned long> shape = d.shape;
+  bool fortran_order = d.fortran_order;
 }
 
 ```
 
-Writing data:
+### Writing data:
 ```c++
 #include "npy.hpp"
 #include <vector>
 #include <string>
 
 int main() {
-  const std::vector<long unsigned> shape{2, 3};
-  const bool fortran_order{false};
-  const std::string path{"out.npy"};
+  const std::vector<double> data{1, 2, 3, 4, 5, 6};
 
-  const std::vector<double> data1{1, 2, 3, 4, 5, 6};
-  npy::SaveArrayAsNumpy(path, fortran_order, shape.size(), shape.data(), data1);
+  npy::npy_data d;
+  d.data = data;
+  d.shape = {2, 3};
+  d.fortran_order = false; // optional
+
+  const std::string path{"out.npy"};
+  write_npy(path, d);
+}
+
+```
+
+This will involve an additional copy of the data, which might be undesireable for larger data. The copy can be avoided by using `npy::npy_data_ptr` as follows.
+
+```c++
+#include "npy.hpp"
+#include <vector>
+#include <string>
+
+int main() {
+  const std::vector<double> data{1, 2, 3, 4, 5, 6};
+
+  npy::npy_data_ptr d;
+  d.data_ptr = data.data();
+  d.shape = {2, 3};
+  d.fortran_order = false; // optional
+
+  const std::string path{"out.npy"};
+  write_npy(path, d);
 }
 
 ```
 
 See `test/` for further examples.
-C++11 is required. If you use g++, use `-std=c++11`.
+C++14 is required.
 
 ## Tests
 The tests can be build with `meson>=0.55` and depend on catch2.
@@ -69,7 +96,6 @@ meson setup builddir
 meson test -Cbuilddir
 ```
 
-
 ## Known limitations
 1. Only a few data types are supported.
 
@@ -77,6 +103,15 @@ meson test -Cbuilddir
 
 ## Contributing
 Feel free to send me a pull request, open an issue, or contact me directly.
+
+The code is formatted with clang-format.
+Please test your changes by running the tests and static analysis.
+Meson automatically builds a target for clang-tidy: 
+```
+cd tests
+meson setup builddir
+ninja -C builddir clang-tidy
+```
 
 ## License
 The project is licensed under the [MIT](LICENSE) license
