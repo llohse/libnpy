@@ -24,9 +24,9 @@ libnpy is a header only library. You only need to download `npy.hpp` into your i
 
 Optional: If you use meson, you can use the provided `meson.build` file to declare the dependency on libnpy.
 
-The API has changed in the last release. The old C-style API is still available, but might get removed in a future release.
+The API has changed in the last release. The old C-style API is still available, but might get removed in the future.
 
-Reading data:
+### Reading data:
 ```c++
 #include "npy.hpp"
 #include <vector>
@@ -44,7 +44,7 @@ int main() {
 
 ```
 
-Writing data:
+### Writing data:
 ```c++
 #include "npy.hpp"
 #include <vector>
@@ -86,7 +86,7 @@ int main() {
 ```
 
 See `test/` for further examples.
-C++11 is required. If you use g++, use `-std=c++11`.
+C++14 is required.
 
 ## Tests
 The tests can be build with `meson>=0.55` and depend on catch2.
@@ -96,7 +96,6 @@ meson setup builddir
 meson test -Cbuilddir
 ```
 
-
 ## Known limitations
 1. Only a few data types are supported.
 
@@ -104,6 +103,15 @@ meson test -Cbuilddir
 
 ## Contributing
 Feel free to send me a pull request, open an issue, or contact me directly.
+
+The code is formatted with clang-format.
+Please test your changes by running the tests and static analysis.
+Meson automatically builds a target for clang-tidy: 
+```
+cd tests
+meson setup builddir
+ninja -C builddir clang-tidy
+```
 
 ## License
 The project is licensed under the [MIT](LICENSE) license
