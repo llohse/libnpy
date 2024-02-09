@@ -59,7 +59,7 @@ int main() {
   d.fortran_order = false; // optional
 
   const std::string path{"out.npy"};
-  write_npy(path, d);
+  npy::write_npy(path, d);
 }
 
 ```
@@ -74,13 +74,13 @@ This will involve an additional copy of the data, which might be undesireable fo
 int main() {
   const std::vector<double> data{1, 2, 3, 4, 5, 6};
 
-  npy::npy_data_ptr d;
+  npy::npy_data_ptr<double> d;
   d.data_ptr = data.data();
   d.shape = {2, 3};
   d.fortran_order = false; // optional
 
   const std::string path{"out.npy"};
-  write_npy(path, d);
+  npy::write_npy(path, d);
 }
 
 ```
