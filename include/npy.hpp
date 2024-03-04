@@ -294,6 +294,7 @@ inline std::string write_tuple(const std::vector<T> &v) {
   if (v.size() == 0) return "()";
 
   std::ostringstream ss;
+  ss.imbue(std::locale("C"));
 
   if (v.size() == 1) {
     ss << "(" << v.front() << ",)";
