@@ -19,12 +19,32 @@ It also allows *reading* .npy files, although only a very limited subset of data
  - floating point
  - complex floating point (std::complex<float>, ...)
 
+## Installation
+libnpy is a header-only library. You only need to download `npy.hpp` into your include path and `#include "npy.hpp"`. Neither special compiler flags nor a specific build system are required.
+
+
+### (Optional) Meson subproject
+For projects using meson as build system, libnpy can be readily included as a subproject.
+
+After cloning or unpacking libnpy into the `subprojects` folder, the dependency can be declared in the `meson.build` file as
+```
+libnpy_subproj = subproject('libnpy')
+libnpy_dep = libnpy_subproj.get_variable('libnpy_dep')
+```
+
+### (Optional) System-wide installation 
+libnpy can also be installed system-wide. This requires the meson build system. From within the sources call
+```
+meson setup builddir
+cd builddir
+meson install
+```
+This will copy the `npy.hpp` into `include/libnpy/` relative to your install prefix (/usr/local/ by default) and generate and install a matching `libnpy.pc`.
+
+The required include path can then be obtained with `pkg-config -cflags libnpy`.
+
 ## Usage
-libnpy is a header only library. You only need to download `npy.hpp` into your include path. Neither special compiler flags nor a specific build system are required.
-
-Optional: If you use meson, you can use the provided `meson.build` file to declare the dependency on libnpy.
-
-The API has changed in the last release. The old C-style API is still available, but might get removed in the future.
+The API has changed in the 1.0 release. The old C-style API is still available, but might get removed in the future.
 
 ### Reading data:
 ```c++
