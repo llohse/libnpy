@@ -21,25 +21,32 @@ jobs:
 
   linux:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./tests
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: '3.x'
       - run: pip install meson ninja
-      - run: meson setup builddir/
-        env:
-          CC: gcc
+      - name: Compile a consumer against the staged installation
+        run: |
+          meson setup build --prefix=/opt/libnpy
+          meson install -C build --destdir "$RUNNER_TEMP/stage"
+          export PKG_CONFIG_LIBDIR="$RUNNER_TEMP/stage/opt/libnpy/share/pkgconfig"
+          export PKG_CONFIG_SYSROOT_DIR="$RUNNER_TEMP/stage"
+          cflags=$(pkg-config --cflags libnpy)
+          c++ -std=c++14 $cflags -x c++ -o "$RUNNER_TEMP/consumer" - <<'EOF'
+          #include <npy.hpp>
+          int main() { return npy::npy_data<double>{}.data.empty() ? 0 : 1; }
+          EOF
+          "$RUNNER_TEMP/consumer"
       - run: pip install numpy
-      - run: meson test -C builddir/ -v
+      - run: meson setup build-tests -Dtests=true
+      - run: meson test -C build-tests -v
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: Linux_Meson_Testlog
-          path: tests/builddir/meson-logs/testlog.txt
+          path: build-tests/meson-logs/testlog.txt
 
 
 

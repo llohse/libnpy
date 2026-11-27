@@ -20,9 +20,25 @@ It also allows *reading* .npy files, although only a very limited subset of data
  - complex floating point (std::complex<float>, ...)
 
 ## Usage
-libnpy is a header only library. You only need to download `npy.hpp` into your include path. Neither special compiler flags nor a specific build system are required.
+libnpy is a single-header library for C++14 or later. Use `#include <npy.hpp>` with any of these options.
 
-Optional: If you use meson, you can use the provided `meson.build` file to declare the dependency on libnpy.
+- **Copy the header.** Put `include/npy.hpp` on your project's include path.
+- **Vendor libnpy in a CMake project.** Place the checkout under `external/libnpy/` and add this line after defining your target (here, `app`).
+
+  ```cmake
+  target_include_directories(app PRIVATE external/libnpy/include)
+  ```
+
+- **Install with Meson.** Run `meson setup build` and `meson install -C build`. Consumers can use `pkg-config --cflags libnpy` or Meson's `dependency('libnpy')`. For a custom prefix, pass `--prefix=/your/prefix` at setup and add `/your/prefix/share/pkgconfig` to `PKG_CONFIG_PATH`.
+- **Use a Meson subproject.** Place the checkout in `subprojects/libnpy/` and use `dependency('libnpy', fallback: ['libnpy', 'libnpy_dep'])` in your target's `dependencies`.
+- **Use an installed copy from CMake.** With pkg-config available, add the following after defining your target (here, `app`).
+
+  ```cmake
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LIBNPY REQUIRED IMPORTED_TARGET libnpy)
+  target_link_libraries(app PRIVATE PkgConfig::LIBNPY)
+  target_compile_features(app PRIVATE cxx_std_14) # C++14 or later
+  ```
 
 The API has changed in the last release. The old C-style API is still available, but might get removed in the future.
 
@@ -85,15 +101,14 @@ int main() {
 
 ```
 
-See `test/` for further examples.
-C++14 is required.
+See `tests/` for further examples.
 
 ## Tests
-The tests can be build with `meson>=0.55` and depend on catch2.
-```
-cd tests
-meson setup builddir
-meson test -Cbuilddir
+The optional tests require Meson 0.55 or later, Python 3 with NumPy, and Catch2 v2. Meson can fetch Catch2 if needed. Run these commands from the repository root.
+
+```sh
+meson setup build -Dtests=true
+meson test -C build
 ```
 
 ## Known limitations
@@ -106,11 +121,10 @@ Feel free to send me a pull request, open an issue, or contact me directly.
 
 The code is formatted with clang-format.
 Please test your changes by running the tests and static analysis.
-Meson automatically builds a target for clang-tidy: 
-```
-cd tests
-meson setup builddir
-ninja -C builddir clang-tidy
+With the test build configured and clang-tidy installed, run
+
+```sh
+ninja -C build clang-tidy
 ```
 
 ## License
