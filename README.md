@@ -23,6 +23,12 @@ It also allows *reading* .npy files, although only a very limited subset of data
 libnpy is a single-header library for C++14 or later. Use `#include <npy.hpp>` with any of these options.
 
 - **Copy the header.** Put `include/npy.hpp` on your project's include path.
+- **Vendor libnpy in a CMake project.** Place the checkout under `external/libnpy/` and add this line after defining your target (here, `app`).
+
+  ```cmake
+  target_include_directories(app PRIVATE external/libnpy/include)
+  ```
+
 - **Install with Meson.** Run `meson setup build` and `meson install -C build`. Consumers can use `pkg-config --cflags libnpy` or Meson's `dependency('libnpy')`. For a custom prefix, pass `--prefix=/your/prefix` at setup and add `/your/prefix/share/pkgconfig` to `PKG_CONFIG_PATH`.
 - **Use a Meson subproject.** Place the checkout in `subprojects/libnpy/` and use `dependency('libnpy', fallback: ['libnpy', 'libnpy_dep'])` in your target's `dependencies`.
 - **Use an installed copy from CMake.** With pkg-config available, add the following after defining your target (here, `app`).
