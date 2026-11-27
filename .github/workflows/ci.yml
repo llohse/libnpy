@@ -21,9 +21,6 @@ jobs:
 
   linux:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./tests
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -31,7 +28,6 @@ jobs:
           python-version: '3.x'
       - run: pip install meson ninja
       - name: Compile a consumer against the staged installation
-        working-directory: .
         run: |
           meson setup build --prefix=/opt/libnpy
           meson install -C build --destdir "$RUNNER_TEMP/stage"
@@ -43,16 +39,14 @@ jobs:
           int main() { return npy::npy_data<double>{}.data.empty() ? 0 : 1; }
           EOF
           "$RUNNER_TEMP/consumer"
-      - run: meson setup builddir/
-        env:
-          CC: gcc
       - run: pip install numpy
-      - run: meson test -C builddir/ -v
+      - run: meson setup build-tests -Dtests=true
+      - run: meson test -C build-tests -v
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: Linux_Meson_Testlog
-          path: tests/builddir/meson-logs/testlog.txt
+          path: build-tests/meson-logs/testlog.txt
 
 
 

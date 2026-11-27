@@ -87,14 +87,14 @@ int main() {
 
 ```
 
-See `test/` for further examples.
+See `tests/` for further examples.
 
 ## Tests
-The tests can be build with `meson>=0.55` and depend on catch2.
-```
-cd tests
-meson setup builddir
-meson test -Cbuilddir
+The optional tests require Meson 0.55 or later, Python 3 with NumPy, and Catch2 v2. Meson can fetch Catch2 if needed. Run these commands from the repository root.
+
+```sh
+meson setup build -Dtests=true
+meson test -C build
 ```
 
 ## Known limitations
@@ -107,11 +107,10 @@ Feel free to send me a pull request, open an issue, or contact me directly.
 
 The code is formatted with clang-format.
 Please test your changes by running the tests and static analysis.
-Meson automatically builds a target for clang-tidy: 
-```
-cd tests
-meson setup builddir
-ninja -C builddir clang-tidy
+With the test build configured and clang-tidy installed, run
+
+```sh
+ninja -C build clang-tidy
 ```
 
 ## License
