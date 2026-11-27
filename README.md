@@ -25,6 +25,14 @@ libnpy is a single-header library for C++14 or later. Use `#include <npy.hpp>` w
 - **Copy the header.** Put `include/npy.hpp` on your project's include path.
 - **Install with Meson.** Run `meson setup build` and `meson install -C build`. Consumers can use `pkg-config --cflags libnpy` or Meson's `dependency('libnpy')`. For a custom prefix, pass `--prefix=/your/prefix` at setup and add `/your/prefix/share/pkgconfig` to `PKG_CONFIG_PATH`.
 - **Use a Meson subproject.** Place the checkout in `subprojects/libnpy/` and use `dependency('libnpy', fallback: ['libnpy', 'libnpy_dep'])` in your target's `dependencies`.
+- **Use an installed copy from CMake.** With pkg-config available, add the following after defining your target (here, `app`).
+
+  ```cmake
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LIBNPY REQUIRED IMPORTED_TARGET libnpy)
+  target_link_libraries(app PRIVATE PkgConfig::LIBNPY)
+  target_compile_features(app PRIVATE cxx_std_14) # C++14 or later
+  ```
 
 The API has changed in the last release. The old C-style API is still available, but might get removed in the future.
 
