@@ -20,9 +20,11 @@ It also allows *reading* .npy files, although only a very limited subset of data
  - complex floating point (std::complex<float>, ...)
 
 ## Usage
-libnpy is a header only library. You only need to download `npy.hpp` into your include path. Neither special compiler flags nor a specific build system are required.
+libnpy is a single C++14 header. Use `#include <npy.hpp>` with any of these options.
 
-Optional: If you use meson, you can use the provided `meson.build` file to declare the dependency on libnpy.
+- **Copy the header.** Put `include/npy.hpp` on your project's include path.
+- **Install with Meson.** Run `meson setup build` and `meson install -C build`. Consumers can use `pkg-config --cflags libnpy` or Meson's `dependency('libnpy')`. For a custom prefix, pass `--prefix=/your/prefix` at setup and add `/your/prefix/share/pkgconfig` to `PKG_CONFIG_PATH`.
+- **Use a Meson subproject.** Place the checkout in `subprojects/libnpy/` and use `dependency('libnpy', fallback: ['libnpy', 'libnpy_dep'])` in your target's `dependencies`.
 
 The API has changed in the last release. The old C-style API is still available, but might get removed in the future.
 
@@ -86,7 +88,6 @@ int main() {
 ```
 
 See `test/` for further examples.
-C++14 is required.
 
 ## Tests
 The tests can be build with `meson>=0.55` and depend on catch2.
