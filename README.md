@@ -20,7 +20,7 @@ It also allows *reading* .npy files, although only a very limited subset of data
  - complex floating point (std::complex<float>, ...)
 
 ## Usage
-libnpy is a single C++14 header. Use `#include <npy.hpp>` with any of these options.
+libnpy is a single-header library for C++14 or later. Use `#include <npy.hpp>` with any of these options.
 
 - **Copy the header.** Put `include/npy.hpp` on your project's include path.
 - **Install with Meson.** Run `meson setup build` and `meson install -C build`. Consumers can use `pkg-config --cflags libnpy` or Meson's `dependency('libnpy')`. For a custom prefix, pass `--prefix=/your/prefix` at setup and add `/your/prefix/share/pkgconfig` to `PKG_CONFIG_PATH`.
